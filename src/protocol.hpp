@@ -1,3 +1,4 @@
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -231,6 +232,7 @@ std::string pack(const bool data);
 std::string pack(const WideChar data);
 std::string pack(const Char data);
 std::string pack(const Color &color);
+
 template <typename T>
 std::string pack(const std::vector<T> &data) {
     std::string result;
@@ -240,6 +242,7 @@ std::string pack(const std::vector<T> &data) {
     }
     return result;
 }
+
 std::string pack(const Palette &data);
 std::string pack(const uint64_t data);
 
@@ -266,3 +269,37 @@ std::string pack(const nmsg::NetMessageEventKeyUp &data);
 std::string pack(const nmsg::NetMessageEventClipboard &data);
 std::string pack(const nmsg::NetMessagePing &data);
 std::string pack(const nmsg::NetMessagePong &data);
+
+
+void unpack(std::stringstream &str, long &result);
+void unpack(std::stringstream &str, uint24_t &result);
+void unpack(std::stringstream &str, uint16_t &result);
+void unpack(std::stringstream &str, uint8_t &result);
+void unpack(std::stringstream &str, std::string &result);
+void unpack(std::stringstream &str, NetMessageCode &result);
+void unpack(std::stringstream &str, ConnectionMode &result);
+void unpack(std::stringstream &str, AuthResult &result);
+void unpack(std::stringstream &str, Resolution &result);
+void unpack(std::stringstream &str, bool &result);
+void unpack(std::stringstream &str, WideChar &result);
+void unpack(std::stringstream &str, Char &result);
+void unpack(std::stringstream &str, Color &result);
+void unpack(std::stringstream &str, Palette &result);
+void unpack(std::stringstream &str, uint64_t &result);
+
+template <typename T>
+void unpack(std::stringstream &str, std::vector<T> &result) {
+    uint24_t len;
+    unpack(str, len);
+    for (uint24_t i = 0; i < len; ++i) {
+        T element;
+        unpack(str, element);
+        result.push_back(element);
+    }
+}
+
+
+void unpack(std::stringstream &str, nmsg::NetMessageError &result);
+void unpack(std::stringstream &str, nmsg::NetMessageAuthClient &result);
+void unpack(std::stringstream &str, nmsg::NetMessageAuthServer &result);
+void unpack(std::stringstream &str, nmsg::NetMessageInitialData &result);

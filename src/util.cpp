@@ -27,6 +27,30 @@ uint32_t Color::rgb() const {
     return (_r << 16) | (_g << 8) | _b;
 }
 
+void Color::r(uint8_t v) {
+    _r = v;
+}
+
+void Color::g(uint8_t v) {
+    _g = v;
+}
+
+void Color::b(uint8_t v) {
+    _b = v;
+}
+
+void Color::rgb(uint32_t v) {
+    _r = (v >> 16) & 0xff;
+    _g = (v >> 8) & 0xff;
+    _b = v & 0xff;
+}
+
+void Color::rgb(uint8_t rv, uint8_t gv, uint8_t bv) {
+    r(rv);
+    g(gv);
+    b(bv);
+}
+
 float Color::delta(const Color &c1, const Color &c2) {
     int dr = c1.r() - c2.r();
     int dg = c1.g() - c2.g();

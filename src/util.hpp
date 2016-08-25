@@ -16,6 +16,11 @@ public:
     uint8_t g() const;
     uint8_t b() const;
     uint32_t rgb() const;
+    void r(uint8_t v);
+    void g(uint8_t v);
+    void b(uint8_t v);
+    void rgb(uint32_t v);
+    void rgb(uint8_t r, uint8_t g, uint8_t b);
     bool operator==(const Color &c) const;
 public:
     static float delta(const Color &c1, const Color &c2);
