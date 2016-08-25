@@ -297,8 +297,26 @@ void unpack(std::stringstream &str, std::vector<T> &result) {
     }
 }
 
-
 void unpack(std::stringstream &str, nmsg::NetMessageError &result);
 void unpack(std::stringstream &str, nmsg::NetMessageAuthClient &result);
 void unpack(std::stringstream &str, nmsg::NetMessageAuthServer &result);
 void unpack(std::stringstream &str, nmsg::NetMessageInitialData &result);
+void unpack(std::stringstream &str, nmsg::NetMessageSetBG &result);
+void unpack(std::stringstream &str, nmsg::NetMessageSetFG &result);
+void unpack(std::stringstream &str, nmsg::NetMessageSetPalette &result);
+void unpack(std::stringstream &str, nmsg::NetMessageSetResolution &result);
+void unpack(std::stringstream &str, nmsg::NetMessageSetChars &result);
+void unpack(std::stringstream &str, nmsg::NetMessageCopy &result);
+void unpack(std::stringstream &str, nmsg::NetMessageFill &result);
+void unpack(std::stringstream &str, nmsg::NetMessageTurnOnOff &result);
+void unpack(std::stringstream &str, nmsg::NetMessageSetPrecise &result);
+void unpack(std::stringstream, nmsg::NetMessageFetch);
+void unpack(std::stringstream &str, nmsg::NetMessageEventTouch &result);
+void unpack(std::stringstream &str, nmsg::NetMessageEventDrag &result);
+void unpack(std::stringstream &str, nmsg::NetMessageEventDrop &result);
+void unpack(std::stringstream &str, nmsg::NetMessageEventScroll &result);
+void unpack(std::stringstream &str, nmsg::NetMessageEventKeyDown &result);
+void unpack(std::stringstream &str, nmsg::NetMessageEventKeyUp &result);
+void unpack(std::stringstream &str, nmsg::NetMessageEventClipboard &result);
+void unpack(std::stringstream &str, nmsg::NetMessagePing &result);
+void unpack(std::stringstream &str, nmsg::NetMessagePong &result);
