@@ -3,192 +3,251 @@
 #include "protocol.hpp"
 
 
-std::string pack(const long data) {
-    std::string result;
-    result.push_back(static_cast<char>((data >> 24) & 0xff));
-    result.push_back(static_cast<char>((data >> 16) & 0xff));
-    result.push_back(static_cast<char>((data >> 8) & 0xff));
-    result.push_back(static_cast<char>(data & 0xff));
+std::stringstream& pack(std::stringstream &result, const long data) {
+    result << static_cast<char>((data >> 24) & 0xff);
+    result << static_cast<char>((data >> 16) & 0xff);
+    result << static_cast<char>((data >> 8) & 0xff);
+    result << static_cast<char>(data & 0xff);
     return result;
 }
 
-std::string pack(const uint24_t data) {
-    std::string result;
-    result.push_back(static_cast<char>((data >> 16) & 0xff));
-    result.push_back(static_cast<char>((data >> 8) & 0xff));
-    result.push_back(static_cast<char>(data & 0xff));
+std::stringstream& pack(std::stringstream &result, const uint24_t data) {
+    result << static_cast<char>((data >> 16) & 0xff);
+    result << static_cast<char>((data >> 8) & 0xff);
+    result << static_cast<char>(data & 0xff);
     return result;
 }
 
-std::string pack(const uint16_t data) {
-    std::string result;
-    result.push_back(static_cast<char>((data >> 8) & 0xff));
-    result.push_back(static_cast<char>(data & 0xff));
+std::stringstream& pack(std::stringstream &result, const uint16_t data) {
+    result << static_cast<char>((data >> 8) & 0xff);
+    result << static_cast<char>(data & 0xff);
     return result;
 }
 
-std::string pack(const uint8_t data) {
-    std::string result;
-    result.push_back(static_cast<char>(data & 0xff));
+std::stringstream& pack(std::stringstream &result, const uint8_t data) {
+    result << static_cast<char>(data & 0xff);
     return result;
 }
 
-std::string pack(const std::string &data) {
-    return pack(static_cast<uint24_t>(data.size())) + data;
-}
-
-std::string pack(const NetMessageCode data) {
-    std::string result;
-    result.push_back(static_cast<char>(data & 0xff));
+std::stringstream& pack(std::stringstream &result, const std::string &data) {
+    pack(result, static_cast<uint24_t>(data.size())) << data;
     return result;
 }
 
-std::string pack(const ConnectionMode data) {
-    return pack(static_cast<uint8_t>(data));
+std::stringstream& pack(std::stringstream &result, const NetMessageCode data) {
+    result << static_cast<char>(data & 0xff);
+    return result;
 }
 
-std::string pack(const AuthResult data) {
-    return pack(static_cast<uint8_t>(data));
+std::stringstream& pack(std::stringstream &result, const ConnectionMode data) {
+    pack(result, static_cast<uint8_t>(data));
+    return result;
 }
 
-std::string pack(const Resolution &data) {
-    return pack(data.w) + pack(data.h);
+std::stringstream& pack(std::stringstream &result, const AuthResult data) {
+    pack(result, static_cast<uint8_t>(data));
+    return result;
 }
 
-std::string pack(const bool data) {
-    return data ? std::string("\xff") : std::string("\x00");
+std::stringstream& pack(std::stringstream &result, const Resolution &data) {
+    pack(result, data.w);
+    pack(result, data.h);
+    return result;
 }
 
-std::string pack(const WideChar data) {
-    return pack(static_cast<uint8_t>(data.c.size())) + data.c;
-}
-
-std::string pack(const Char data) {
-    return pack(data.c) + pack(data.fg) + pack(data.bg);
-}
-
-std::string pack(const Color &color) {
-    return pack(color.rgb());
-}
-
-std::string pack(const Palette &data) {
-    std::string result;
-    for (int i = 0; i < 16; ++i) {
-        result.append(pack(data[i]));
+std::stringstream& pack(std::stringstream &result, const bool data) {
+    if (data) {
+        result << '\xff';
+    } else {
+        result << '\x00';
     }
     return result;
 }
 
-std::string pack(const uint64_t data) {
-    std::string result;
-    result.push_back(static_cast<char>((data >> 56) & 0xff));
-    result.push_back(static_cast<char>((data >> 48) & 0xff));
-    result.push_back(static_cast<char>((data >> 40) & 0xff));
-    result.push_back(static_cast<char>((data >> 32) & 0xff));
-    result.push_back(static_cast<char>((data >> 24) & 0xff));
-    result.push_back(static_cast<char>((data >> 16) & 0xff));
-    result.push_back(static_cast<char>((data >> 8) & 0xff));
-    result.push_back(static_cast<char>(data & 0xff));
+std::stringstream& pack(std::stringstream &result, const WideChar data) {
+    pack(result, static_cast<uint8_t>(data.c.size())) << data.c;
+    return result;
+}
+
+std::stringstream& pack(std::stringstream &result, const Char data) {
+    pack(result, data.c);
+    pack(result, data.fg);
+    pack(result, data.bg);
+    return result;
+}
+
+std::stringstream& pack(std::stringstream &result, const Color &color) {
+    pack(result, color.rgb());
+    return result;
+}
+
+std::stringstream& pack(std::stringstream &result, const Palette &data) {
+    for (int i = 0; i < 16; ++i) {
+        pack(result, data[i]);
+    }
+    return result;
+}
+
+std::stringstream& pack(std::stringstream &result, const uint64_t data) {
+    result << static_cast<char>((data >> 56) & 0xff);
+    result << static_cast<char>((data >> 48) & 0xff);
+    result << static_cast<char>((data >> 40) & 0xff);
+    result << static_cast<char>((data >> 32) & 0xff);
+    result << static_cast<char>((data >> 24) & 0xff);
+    result << static_cast<char>((data >> 16) & 0xff);
+    result << static_cast<char>((data >> 8) & 0xff);
+    result << static_cast<char>(data & 0xff);
     return result;
 }
 
 
-std::string pack(const nmsg::NetMessageError &data) {
-    return pack(data.description);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageError &data) {
+    pack(result, data.description);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageAuthClient &data) {
-    return pack(data.user) + pack(data.password) +
-           pack(data.connectionMode) + pack(data.pingInterval);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageAuthClient &data) {
+    pack(result, data.user);
+    pack(result, data.password);
+    pack(result, data.connectionMode);
+    pack(result, data.pingInterval);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageAuthServer &data) {
-    return pack(data.result) + pack(data.displayString);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageAuthServer &data) {
+    pack(result, data.result);
+    pack(result, data.displayString);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageInitialData &data) {
-    return pack(data.palette) + pack(data.fg) +
-           pack(data.bg) + pack(data.resolution) + pack(data.screenState) +
-           pack(data.preciseMode) + pack(data.chars);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageInitialData &data) {
+    pack(result, data.palette);
+    pack(result, data.fg);
+    pack(result, data.bg);
+    pack(result, data.resolution);
+    pack(result, data.screenState);
+    pack(result, data.preciseMode);
+    pack(result, data.chars);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageSetBG &data) {
-    return pack(data.index);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetBG &data) {
+    pack(result, data.index);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageSetFG &data) {
-    return pack(data.index);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetFG &data) {
+    pack(result, data.index);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageSetPalette &data) {
-    return pack(data.color) + pack(data.index);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetPalette &data) {
+    pack(result, data.color);
+    pack(result, data.index);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageSetResolution &data) {
-    return pack(data.w) + pack(data.h);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetResolution &data) {
+    pack(result, data.w);
+    pack(result, data.h);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageSetChars &data) {
-    return pack(data.x) + pack(data.y) + pack(data.chars) +
-           pack(data.vertical);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetChars &data) {
+    pack(result, data.x);
+    pack(result, data.y);
+    pack(result, data.chars);
+    pack(result, data.vertical);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageCopy &data) {
-    return pack(data.x) + pack(data.y) + pack(data.w) +
-           pack(data.h) + pack(data.tx) + pack(data.ty);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageCopy &data) {
+    pack(result, data.x);
+    pack(result, data.y);
+    pack(result, data.w);
+    pack(result, data.h);
+    pack(result, data.tx);
+    pack(result, data.ty);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageFill &data) {
-    return pack(data.x) + pack(data.y) + pack(data.w) +
-           pack(data.h) + pack(data.c);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFill &data) {
+    pack(result, data.x);
+    pack(result, data.y);
+    pack(result, data.w);
+    pack(result, data.h);
+    pack(result, data.c);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageTurnOnOff &data) {
-    return pack(data.on);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageTurnOnOff &data) {
+    pack(result, data.on);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageSetPrecise &data) {
-    return pack(data.precise);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetPrecise &data) {
+    pack(result, data.precise);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageFetch &data) {
-    return pack(data.code);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFetch &data) {
+    pack(result, data.code);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageEventTouch &data) {
-    return pack(data.x) + pack(data.y) + pack(data.button);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventTouch &data) {
+    pack(result, data.x);
+    pack(result, data.y);
+    pack(result, data.button);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageEventDrag &data) {
-    return pack(data.x) + pack(data.y) + pack(data.button);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventDrag &data) {
+    pack(result, data.x);
+    pack(result, data.y);
+    pack(result, data.button);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageEventDrop &data) {
-    return pack(data.x) + pack(data.y) + pack(data.button);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventDrop &data) {
+    pack(result, data.x);
+    pack(result, data.y);
+    pack(result, data.button);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageEventScroll &data) {
-    return pack(data.x) + pack(data.y) + pack(data.direction);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventScroll &data) {
+    pack(result, data.x);
+    pack(result, data.y);
+    pack(result, data.direction);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageEventKeyDown &data) {
-    return pack(data.chr) + pack(data.cod);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventKeyDown &data) {
+    pack(result, data.chr);
+    pack(result, data.cod);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageEventKeyUp &data) {
-    return pack(data.chr) + pack(data.cod);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventKeyUp &data) {
+    pack(result, data.chr);
+    pack(result, data.cod);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessageEventClipboard &data) {
-    return pack(data.data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventClipboard &data) {
+    pack(result, data.data);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessagePing &data) {
-    return pack(data.ping);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessagePing &data) {
+    pack(result, data.ping);
+    return result;
 }
 
-std::string pack(const nmsg::NetMessagePong &data) {
-    return pack(data.pong);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessagePong &data) {
+    pack(result, data.pong);
+    return result;
 }
 
 

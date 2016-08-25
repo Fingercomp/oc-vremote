@@ -219,56 +219,55 @@ namespace nmsg {
     };
 }
 
-std::string pack(const long data);
-std::string pack(const uint24_t data);
-std::string pack(const uint16_t data);
-std::string pack(const uint8_t data);
-std::string pack(const std::string &data);
-std::string pack(const NetMessageCode data);
-std::string pack(const ConnectionMode data);
-std::string pack(const AuthResult data);
-std::string pack(const Resolution &data);
-std::string pack(const bool data);
-std::string pack(const WideChar data);
-std::string pack(const Char data);
-std::string pack(const Color &color);
+std::stringstream& pack(std::stringstream &result, const long data);
+std::stringstream& pack(std::stringstream &result, const uint24_t data);
+std::stringstream& pack(std::stringstream &result, const uint16_t data);
+std::stringstream& pack(std::stringstream &result, const uint8_t data);
+std::stringstream& pack(std::stringstream &result, const std::string &data);
+std::stringstream& pack(std::stringstream &result, const NetMessageCode data);
+std::stringstream& pack(std::stringstream &result, const ConnectionMode data);
+std::stringstream& pack(std::stringstream &result, const AuthResult data);
+std::stringstream& pack(std::stringstream &result, const Resolution &data);
+std::stringstream& pack(std::stringstream &result, const bool data);
+std::stringstream& pack(std::stringstream &result, const WideChar data);
+std::stringstream& pack(std::stringstream &result, const Char data);
+std::stringstream& pack(std::stringstream &result, const Color &color);
 
 template <typename T>
-std::string pack(const std::vector<T> &data) {
-    std::string result;
-    result.append(pack(static_cast<uint24_t>(data.size())));
+std::stringstream& pack(std::stringstream &result, const std::vector<T> &data) {
+    pack(result, static_cast<uint24_t>(data.size()));
     for (auto i: data) {
-        result.append(pack(i));
+        pack(result, i);
     }
     return result;
 }
 
-std::string pack(const Palette &data);
-std::string pack(const uint64_t data);
+std::stringstream& pack(std::stringstream &result, const Palette &data);
+std::stringstream& pack(std::stringstream &result, const uint64_t data);
 
-std::string pack(const nmsg::NetMessageError &data);
-std::string pack(const nmsg::NetMessageAuthClient &data);
-std::string pack(const nmsg::NetMessageAuthServer &data);
-std::string pack(const nmsg::NetMessageInitialData &data);
-std::string pack(const nmsg::NetMessageSetBG &data);
-std::string pack(const nmsg::NetMessageSetFG &data);
-std::string pack(const nmsg::NetMessageSetPalette &data);
-std::string pack(const nmsg::NetMessageSetResolution &data);
-std::string pack(const nmsg::NetMessageSetChars &data);
-std::string pack(const nmsg::NetMessageCopy &data);
-std::string pack(const nmsg::NetMessageFill &data);
-std::string pack(const nmsg::NetMessageTurnOnOff &data);
-std::string pack(const nmsg::NetMessageSetPrecise &data);
-std::string pack(const nmsg::NetMessageFetch &data);
-std::string pack(const nmsg::NetMessageEventTouch &data);
-std::string pack(const nmsg::NetMessageEventDrag &data);
-std::string pack(const nmsg::NetMessageEventDrop &data);
-std::string pack(const nmsg::NetMessageEventScroll &data);
-std::string pack(const nmsg::NetMessageEventKeyDown &data);
-std::string pack(const nmsg::NetMessageEventKeyUp &data);
-std::string pack(const nmsg::NetMessageEventClipboard &data);
-std::string pack(const nmsg::NetMessagePing &data);
-std::string pack(const nmsg::NetMessagePong &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageError &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageAuthClient &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageAuthServer &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageInitialData &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetBG &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetFG &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetPalette &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetResolution &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetChars &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageCopy &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFill &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageTurnOnOff &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetPrecise &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFetch &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventTouch &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventDrag &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventDrop &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventScroll &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventKeyDown &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventKeyUp &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventClipboard &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessagePing &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessagePong &data);
 
 
 void unpack(std::stringstream &str, long &result);
