@@ -4,38 +4,41 @@
 
 
 std::stringstream& pack(std::stringstream &result, const long data) {
-    result << static_cast<char>((data >> 24) & 0xff);
-    result << static_cast<char>((data >> 16) & 0xff);
-    result << static_cast<char>((data >> 8) & 0xff);
-    result << static_cast<char>(data & 0xff);
+    result.put(static_cast<char>((data >> 24) & 0xff));
+    result.put(static_cast<char>((data >> 16) & 0xff));
+    result.put(static_cast<char>((data >> 8) & 0xff));
+    result.put(static_cast<char>(data & 0xff));
     return result;
 }
 
 std::stringstream& pack(std::stringstream &result, const uint24_t data) {
-    result << static_cast<char>((data >> 16) & 0xff);
-    result << static_cast<char>((data >> 8) & 0xff);
-    result << static_cast<char>(data & 0xff);
+    result.put(static_cast<char>((data >> 16) & 0xff));
+    result.put(static_cast<char>((data >> 8) & 0xff));
+    result.put(static_cast<char>(data & 0xff));
     return result;
 }
 
 std::stringstream& pack(std::stringstream &result, const uint16_t data) {
-    result << static_cast<char>((data >> 8) & 0xff);
-    result << static_cast<char>(data & 0xff);
+    result.put(static_cast<char>((data >> 8) & 0xff));
+    result.put(static_cast<char>(data & 0xff));
     return result;
 }
 
 std::stringstream& pack(std::stringstream &result, const uint8_t data) {
-    result << static_cast<char>(data & 0xff);
+    result.put(static_cast<char>(data & 0xff));
     return result;
 }
 
 std::stringstream& pack(std::stringstream &result, const std::string &data) {
-    pack(result, static_cast<uint24_t>(data.size())) << data;
+    pack(result, static_cast<uint24_t>(data.size()));
+    for (int i = 0; i < static_cast<int>(data.size()); ++i) {
+        result.put(data.at(i));
+    }
     return result;
 }
 
 std::stringstream& pack(std::stringstream &result, const NetMessageCode data) {
-    result << static_cast<char>(data & 0xff);
+    result.put(static_cast<char>(data & 0xff));
     return result;
 }
 
@@ -57,19 +60,22 @@ std::stringstream& pack(std::stringstream &result, const Resolution &data) {
 
 std::stringstream& pack(std::stringstream &result, const bool data) {
     if (data) {
-        result << '\xff';
+        result.put('\xff');
     } else {
-        result << '\x00';
+        result.put('\x00');
     }
     return result;
 }
 
-std::stringstream& pack(std::stringstream &result, const WideChar data) {
-    pack(result, static_cast<uint8_t>(data.c.size())) << data.c;
+std::stringstream& pack(std::stringstream &result, const WideChar &data) {
+    pack(result, static_cast<uint8_t>(data.c.size()));
+    for (int i = 0; i < static_cast<int>(data.c.size()); ++i) {
+        result.put(data.c.at(i));
+    }
     return result;
 }
 
-std::stringstream& pack(std::stringstream &result, const Char data) {
+std::stringstream& pack(std::stringstream &result, const Char &data) {
     pack(result, data.c);
     pack(result, data.fg);
     pack(result, data.bg);
@@ -89,14 +95,14 @@ std::stringstream& pack(std::stringstream &result, const Palette &data) {
 }
 
 std::stringstream& pack(std::stringstream &result, const uint64_t data) {
-    result << static_cast<char>((data >> 56) & 0xff);
-    result << static_cast<char>((data >> 48) & 0xff);
-    result << static_cast<char>((data >> 40) & 0xff);
-    result << static_cast<char>((data >> 32) & 0xff);
-    result << static_cast<char>((data >> 24) & 0xff);
-    result << static_cast<char>((data >> 16) & 0xff);
-    result << static_cast<char>((data >> 8) & 0xff);
-    result << static_cast<char>(data & 0xff);
+    result.put(static_cast<char>((data >> 56) & 0xff));
+    result.put(static_cast<char>((data >> 48) & 0xff));
+    result.put(static_cast<char>((data >> 40) & 0xff));
+    result.put(static_cast<char>((data >> 32) & 0xff));
+    result.put(static_cast<char>((data >> 24) & 0xff));
+    result.put(static_cast<char>((data >> 16) & 0xff));
+    result.put(static_cast<char>((data >> 8) & 0xff));
+    result.put(static_cast<char>(data & 0xff));
     return result;
 }
 

@@ -229,8 +229,8 @@ std::stringstream& pack(std::stringstream &result, const ConnectionMode data);
 std::stringstream& pack(std::stringstream &result, const AuthResult data);
 std::stringstream& pack(std::stringstream &result, const Resolution &data);
 std::stringstream& pack(std::stringstream &result, const bool data);
-std::stringstream& pack(std::stringstream &result, const WideChar data);
-std::stringstream& pack(std::stringstream &result, const Char data);
+std::stringstream& pack(std::stringstream &result, const WideChar &data);
+std::stringstream& pack(std::stringstream &result, const Char &data);
 std::stringstream& pack(std::stringstream &result, const Color &color);
 
 template <typename T>
