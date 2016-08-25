@@ -258,7 +258,7 @@ std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageCopy &d
 std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFill &data);
 std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageTurnOnOff &data);
 std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetPrecise &data);
-std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFetch &data);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFetch &);
 std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventTouch &data);
 std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventDrag &data);
 std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventDrop &data);
@@ -310,7 +310,7 @@ void unpack(std::stringstream &str, nmsg::NetMessageCopy &result);
 void unpack(std::stringstream &str, nmsg::NetMessageFill &result);
 void unpack(std::stringstream &str, nmsg::NetMessageTurnOnOff &result);
 void unpack(std::stringstream &str, nmsg::NetMessageSetPrecise &result);
-void unpack(std::stringstream, nmsg::NetMessageFetch);
+void unpack(std::stringstream &, nmsg::NetMessageFetch &);
 void unpack(std::stringstream &str, nmsg::NetMessageEventTouch &result);
 void unpack(std::stringstream &str, nmsg::NetMessageEventDrag &result);
 void unpack(std::stringstream &str, nmsg::NetMessageEventDrop &result);

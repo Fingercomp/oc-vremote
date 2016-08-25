@@ -196,8 +196,7 @@ std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageSetPrec
     return result;
 }
 
-std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFetch &data) {
-    pack(result, data.code);
+std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageFetch &) {
     return result;
 }
 
@@ -443,7 +442,7 @@ void unpack(std::stringstream &str, nmsg::NetMessageSetPrecise &result) {
     unpack(str, result.precise);
 }
 
-void unpack(std::stringstream, nmsg::NetMessageFetch) {}
+void unpack(std::stringstream &, nmsg::NetMessageFetch &) {}
 
 void unpack(std::stringstream &str, nmsg::NetMessageEventTouch &result) {
     unpack(str, result.x);
