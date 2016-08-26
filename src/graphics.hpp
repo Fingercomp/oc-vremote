@@ -25,10 +25,10 @@ public:
 
 class Tilemap: public sf::Drawable, public sf::Transformable {
 private:
-    Charmap _charmap;
-    sf::Texture _tileset;
+    Charmap &_charmap;
+    sf::Texture &_tileset;
     sf::VertexArray _vertices;
-    std::vector<unsigned long> _indexes;
+    std::vector<unsigned long> &_indexes;
     Palette _palette;
     virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 public:

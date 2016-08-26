@@ -96,7 +96,7 @@ void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::T
 Charmap::Charmap(const int w, const int h): _w(w), _h(h) {
     for (int i = 0; i < w * h; ++i) {
         Char c;
-        c.fg = 16;
+        c.fg = 255;
         c.bg = 16;
         c.c = 32;  // Whitespace
         _chars.push_back(c);

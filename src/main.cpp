@@ -18,22 +18,7 @@ int main() {
     fistr = nullptr;
 
     Charmap charmap(10, 10);
-    Char c1;
-    c1.c = 97; // "a"
-    c1.fg = 14;
-    c1.bg = 14;
-    Char c2;
-    c2.c = 99; // "c"
-    c2.fg = 10;
-    c2.bg = 10;
-    charmap.get(0, 0) = c1;
-    charmap.get(1, 1) = c2;
     Palette palette;
-
-    for (int i = 0; i < 256; ++i) {
-        Color c = palette.index2color(i);
-        std::cout << "i: " << static_cast<int>(i) << "; r: " << static_cast<int>(c.r()) << "; g: " << static_cast<int>(c.g()) << "; b: " << static_cast<int>(c.b()) << "\n";
-    }
 
     Tilemap tilemap(texture, charmap, indexes, palette);
 
@@ -55,6 +40,18 @@ int main() {
                 }
                 default:
                     break;
+            }
+        }
+        for (int i = 0; i < 10; ++i) {
+            for (int j = 0; j < 10; ++j) {
+                uint8_t cr = rand() % 255;
+                uint8_t cg = rand() % 255;
+                uint8_t cb = rand() % 255;
+                uint32_t chr = rand() % 0x8000;
+                Char c;
+                c.c = chr;
+                c.fg = palette.color2index(Color(cr, cg, cb));
+                charmap.get(i, j) = c;
             }
         }
         window.clear();
