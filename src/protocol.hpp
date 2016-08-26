@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -53,12 +55,8 @@ struct Resolution {
     uint8_t h;
 };
 
-struct WideChar {
-    std::string c;
-};
-
 struct Char {
-    WideChar c;
+    long c;
     uint8_t fg;
     uint8_t bg;
 };
@@ -66,6 +64,12 @@ struct Char {
 
 struct NetMessage {
     NetMessageCode code;
+    // To allow dynamic_casting the NetMessage object in the
+    // message queue back to derived object, we need to make
+    // the class/struct polymorphic, i.e. have at least 1
+    // virtual member. The destructor will work, won't it?
+    // It doesn't even need to do anything...
+    virtual ~NetMessage() {}
 };
 
 
@@ -146,7 +150,7 @@ namespace nmsg {
         uint8_t y;
         uint8_t w;
         uint8_t h;
-        WideChar c;
+        long c;
     };
 
     struct NetMessageTurnOnOff: public NetMessage {
@@ -229,7 +233,6 @@ std::stringstream& pack(std::stringstream &result, const ConnectionMode data);
 std::stringstream& pack(std::stringstream &result, const AuthResult data);
 std::stringstream& pack(std::stringstream &result, const Resolution &data);
 std::stringstream& pack(std::stringstream &result, const bool data);
-std::stringstream& pack(std::stringstream &result, const WideChar &data);
 std::stringstream& pack(std::stringstream &result, const Char &data);
 std::stringstream& pack(std::stringstream &result, const Color &color);
 
@@ -280,7 +283,6 @@ void unpack(std::stringstream &str, ConnectionMode &result);
 void unpack(std::stringstream &str, AuthResult &result);
 void unpack(std::stringstream &str, Resolution &result);
 void unpack(std::stringstream &str, bool &result);
-void unpack(std::stringstream &str, WideChar &result);
 void unpack(std::stringstream &str, Char &result);
 void unpack(std::stringstream &str, Color &result);
 void unpack(std::stringstream &str, Palette &result);

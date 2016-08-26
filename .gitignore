@@ -14,6 +14,7 @@
 *.swo
 **/.ycm_extra_conf.py
 **/__pycache__/
+/vim.session
 
 # Windows
 /windows-libs/*
@@ -22,3 +23,6 @@
 /scripts/
 /build/
 /tmp/
+
+# Resources
+/resources/font.hex

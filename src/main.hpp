@@ -1,4 +1,8 @@
+#pragma once
+
 #include <queue>
+
+#include "protocol.hpp"
 
 
 enum class State {
@@ -19,4 +23,8 @@ enum class State {
 // The settings changed at runtime
 namespace programSettings {
     State state = State::INITIALIZING;
+    namespace msgQueue {
+        std::queue<NetMessage> in;
+        std::queue<NetMessage> out;
+    }
 }

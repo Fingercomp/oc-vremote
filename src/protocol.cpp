@@ -67,14 +67,6 @@ std::stringstream& pack(std::stringstream &result, const bool data) {
     return result;
 }
 
-std::stringstream& pack(std::stringstream &result, const WideChar &data) {
-    pack(result, static_cast<uint8_t>(data.c.size()));
-    for (int i = 0; i < static_cast<int>(data.c.size()); ++i) {
-        result.put(data.c.at(i));
-    }
-    return result;
-}
-
 std::stringstream& pack(std::stringstream &result, const Char &data) {
     pack(result, data.c);
     pack(result, data.fg);
@@ -320,14 +312,6 @@ void unpack(std::stringstream &str, bool &result) {
             break;
         default:
             throw std::runtime_error("Bad value for boolean");
-    }
-}
-
-void unpack(std::stringstream &str, WideChar &result) {
-    uint8_t len;
-    unpack(str, len);
-    for (int i = 0; i < len; ++i) {
-        result.c.push_back(str.get());
     }
 }
 

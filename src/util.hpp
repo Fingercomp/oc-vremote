@@ -2,6 +2,9 @@
 
 #include <array>
 #include <cstdint>
+#include <vector>
+
+#include "SFML/Graphics.hpp"
 
 
 class Color {
@@ -22,6 +25,7 @@ public:
     void rgb(uint32_t v);
     void rgb(uint8_t r, uint8_t g, uint8_t b);
     bool operator==(const Color &c) const;
+    operator sf::Color() const;
 public:
     static float delta(const Color &c1, const Color &c2);
 };
@@ -38,3 +42,13 @@ public:
     Color& operator[](const int idx);
     const Color& operator[](const int idx) const;
 };
+
+
+template <typename T>
+inline void fill(std::vector<T> &vector, int size) {
+    vector.reserve(size);
+    vector.resize(size);
+}
+
+
+unsigned long getCodepoint(const std::string &str);
