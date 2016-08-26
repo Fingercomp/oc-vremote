@@ -95,7 +95,7 @@ void Palette::generatePalette() {
         r = (r * 255 + 2) / 5;
         g = (g * 255 + 3) / 7;
         b = (b * 255 + 2) / 4;
-        _colors.at(i) = Color(r, g, b);
+        _colors.at(i + 16) = Color(r, g, b);
     }
 }
 

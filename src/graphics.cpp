@@ -152,6 +152,7 @@ void Tilemap::update() {
             Char chr = _charmap.get(i, j);
             // Color fg = _palette.index2color(chr.fg);
             unsigned long codepoint = chr.c;
+            sf::Color fg = _palette.index2color(chr.fg);
             int tx1 = 0;
             int ty1 = 0;
             int tx2 = 0;
@@ -178,10 +179,11 @@ void Tilemap::update() {
             quad[2].texCoords = sf::Vector2f((tx1 + 1) * 8 + tx2, (ty1 + 1) * 16);
             quad[3].texCoords = sf::Vector2f(tx1 * 8, (ty1 + 1) * 16);
 
-            // quad[0].color = fg;
-            // quad[1].color = fg;
-            // quad[2].color = fg;
-            // quad[3].color = fg;
+            quad[0].color = fg;
+            quad[1].color = fg;
+            quad[2].color = fg;
+            quad[3].color = fg;
+
         }
     }
 }

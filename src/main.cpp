@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 
 #include <SFML/Graphics.hpp>
 
@@ -17,12 +18,22 @@ int main() {
     fistr = nullptr;
 
     Charmap charmap(10, 10);
-    Char c;
-    c.c = 97; // "a"
-    c.fg = 6;
-    c.bg = 6;
-    charmap.get(0, 0) = c;
+    Char c1;
+    c1.c = 97; // "a"
+    c1.fg = 14;
+    c1.bg = 14;
+    Char c2;
+    c2.c = 99; // "c"
+    c2.fg = 10;
+    c2.bg = 10;
+    charmap.get(0, 0) = c1;
+    charmap.get(1, 1) = c2;
     Palette palette;
+
+    for (int i = 0; i < 256; ++i) {
+        Color c = palette.index2color(i);
+        std::cout << "i: " << static_cast<int>(i) << "; r: " << static_cast<int>(c.r()) << "; g: " << static_cast<int>(c.g()) << "; b: " << static_cast<int>(c.b()) << "\n";
+    }
 
     Tilemap tilemap(texture, charmap, indexes, palette);
 
