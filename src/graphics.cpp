@@ -53,7 +53,7 @@ void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::T
                 chr.erase(0, chr.size());
                 chr.push_back(bitmap.at(63 - i));
                 int num = stoi(chr, nullptr, 16);
-                for (int j = 0; j < 4; ++j) {
+                for (int j = 3; j >= 0; --j) {
                     writeBitmapPixel(pixArray.at(16 * indexY + 15 - i / 4), ((num >> j) & 0x1) ? true : false);
                 }
             }
@@ -68,29 +68,32 @@ void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::T
                 chr.erase(0, chr.size());
                 chr.push_back(bitmap.at(31 - i));
                 int num = stoi(chr, nullptr, 16);
-                for (int j = 0; j < 4; ++j) {
+                for (int j = 3; j >= 0; --j) {
                     writeBitmapPixel(pixArray.at(16 * indexY + 15 - i / 2), ((num >> j) & 0x1) ? true : false);
                 }
             }
             result.push_back(iCodePnt);
-            result.push_back(indexX++);
+            result.push_back(indexX);
             result.push_back(indexY);
             result.push_back(0);
+            ++indexX;
         }
     }
     // "Glue" array of vectors
     for (unsigned int i = 0; i < pixArray.size(); ++i) {
-        for (auto item: pixArray.at(i)) {
-            pixels.push_back(item);
+        for (unsigned int j = pixArray.at(i).size(); j < 16384; j += 4) {
+            writeBitmapPixel(pixArray.at(i), false);
+        }
+        for (unsigned int j = 0; j < pixArray.at(i).size(); ++j) {
+            pixels.push_back(pixArray.at(i).at(j));
         }
     }
-    texture.create(8 * indexX, 16 * indexY);
+    texture.create(4096, 16 * (indexY + 1));
     texture.update(&pixels[0]);
 }
 
 
 Charmap::Charmap(const int w, const int h): _w(w), _h(h) {
-    fill(_chars, w * h);
     for (int i = 0; i < w * h; ++i) {
         Char c;
         c.fg = 16;
@@ -147,7 +150,7 @@ void Tilemap::update() {
     for (int i = 0; i < w; ++i) {
         for (int j = 0; j < h; ++j) {
             Char chr = _charmap.get(i, j);
-            Color fg = _palette.index2color(chr.fg);
+            // Color fg = _palette.index2color(chr.fg);
             unsigned long codepoint = chr.c;
             int tx1 = 0;
             int ty1 = 0;
@@ -158,6 +161,7 @@ void Tilemap::update() {
                     tx1 = _indexes.at(n + 1);
                     ty1 = _indexes.at(n + 2);
                     isWide = _indexes.at(n + 3) == 1 ? true : false;
+                    break;
                 }
             }
 
@@ -165,19 +169,19 @@ void Tilemap::update() {
 
             sf::Vertex *quad = &_vertices[(i + j * w) * 4];
             quad[0].position = sf::Vector2f(i * 8, j * 16);
-            quad[1].position = sf::Vector2f(i * 8 + tx2, j * 16);
-            quad[2].position = sf::Vector2f(i * 8 + tx2, (j + 1) * 16);
+            quad[1].position = sf::Vector2f((i + 1) * 8 + tx2, j * 16);
+            quad[2].position = sf::Vector2f((i + 1) * 8 + tx2, (j + 1) * 16);
             quad[3].position = sf::Vector2f(i * 8, (j + 1) * 16);
 
             quad[0].texCoords = sf::Vector2f(tx1 * 8, ty1 * 16);
-            quad[1].texCoords = sf::Vector2f(tx1 * 8 + tx2, ty1 * 16);
-            quad[2].texCoords = sf::Vector2f(tx1 * 8 + tx2, (ty1 + 1) * 16);
+            quad[1].texCoords = sf::Vector2f((tx1 + 1) * 8 + tx2, ty1 * 16);
+            quad[2].texCoords = sf::Vector2f((tx1 + 1) * 8 + tx2, (ty1 + 1) * 16);
             quad[3].texCoords = sf::Vector2f(tx1 * 8, (ty1 + 1) * 16);
 
-            quad[0].color = fg;
-            quad[1].color = fg;
-            quad[2].color = fg;
-            quad[3].color = fg;
+            // quad[0].color = fg;
+            // quad[1].color = fg;
+            // quad[2].color = fg;
+            // quad[3].color = fg;
         }
     }
 }
