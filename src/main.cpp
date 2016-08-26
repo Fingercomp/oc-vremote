@@ -25,8 +25,6 @@ int main() {
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Test");
 
-    // sf::Sprite sprite(texture);
-
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -57,7 +55,6 @@ int main() {
         window.clear();
         tilemap.update();
         window.draw(tilemap);
-        // window.draw(sprite);
         window.display();
     }
 }
