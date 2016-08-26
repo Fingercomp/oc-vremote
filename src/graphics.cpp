@@ -20,8 +20,13 @@ void writeBitmapPixel(std::vector<sf::Uint8> &pixels, bool isWhite) {
 
 void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::Texture &texture) {
     static std::vector<sf::Uint8> pixels;
-    std::array<std::vector<sf::Uint8>, 16> pixArray;
-    unsigned long index = 0;
+    std::vector<std::vector<sf::Uint8>> pixArray;
+    for (int i = 0; i < 16; ++i) {
+        std::vector<sf::Uint8> newArr;
+        pixArray.push_back(newArr);
+    }
+    unsigned long indexX = 0;
+    unsigned long indexY = 0;
     while (*str && !str->eof()) {
         std::string line;
         std::getline(*str, line);
@@ -33,6 +38,15 @@ void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::T
         unsigned long iCodePnt = stoul(codePnt, nullptr, 16);
         std::string bitmap = line.substr(colPos + 1, line.size() - colPos - 1);
         std::string chr;
+        if (indexX >= 510) {
+            // The max texture dimensions are 4096×4096 px
+            for (int i = 0; i < 16; ++i) {
+                std::vector<sf::Uint8> newArr;
+                pixArray.push_back(newArr);
+            }
+            indexX = 0;
+            ++indexY;
+        }
         if (static_cast<int>(bitmap.size()) == 64) {
             // Double-width character
             for (int i = 63; i >= 0; --i) {
@@ -40,13 +54,14 @@ void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::T
                 chr.push_back(bitmap.at(63 - i));
                 int num = stoi(chr, nullptr, 16);
                 for (int j = 0; j < 4; ++j) {
-                    writeBitmapPixel(pixArray.at(15 - i / 4), ((num >> j) & 0x1) ? true : false);
+                    writeBitmapPixel(pixArray.at(16 * indexY + 15 - i / 4), ((num >> j) & 0x1) ? true : false);
                 }
             }
             result.push_back(iCodePnt);
-            result.push_back(index);
+            result.push_back(indexX);
+            result.push_back(indexY);
             result.push_back(1);
-            index += 2;
+            indexX += 2;
         } else if (static_cast<int>(bitmap.size()) == 32) {
             // Single-width character
             for (int i = 31; i >= 0; --i) {
@@ -54,21 +69,22 @@ void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::T
                 chr.push_back(bitmap.at(31 - i));
                 int num = stoi(chr, nullptr, 16);
                 for (int j = 0; j < 4; ++j) {
-                    writeBitmapPixel(pixArray.at(15 - i / 2), ((num >> j) & 0x1) ? true : false);
+                    writeBitmapPixel(pixArray.at(16 * indexY + 15 - i / 2), ((num >> j) & 0x1) ? true : false);
                 }
             }
             result.push_back(iCodePnt);
-            result.push_back(index++);
+            result.push_back(indexX++);
+            result.push_back(indexY);
             result.push_back(0);
         }
     }
     // "Glue" array of vectors
-    for (int i = 0; i < 16; ++i) {
+    for (unsigned int i = 0; i < pixArray.size(); ++i) {
         for (auto item: pixArray.at(i)) {
             pixels.push_back(item);
         }
     }
-    texture.create(8 * index, 16);
+    texture.create(8 * indexX, 16 * indexY);
     texture.update(&pixels[0]);
 }
 
@@ -134,12 +150,14 @@ void Tilemap::update() {
             Color fg = _palette.index2color(chr.fg);
             unsigned long codepoint = chr.c;
             int tx1 = 0;
+            int ty1 = 0;
             int tx2 = 0;
             bool isWide = false;
-            for (std::string::size_type n = 0; n < _indexes.size(); n += 3) {
+            for (std::string::size_type n = 0; n < _indexes.size(); n += 4) {
                 if (_indexes.at(n) == codepoint) {
                     tx1 = _indexes.at(n + 1);
-                    isWide = _indexes.at(n + 2) == 1 ? true : false;
+                    ty1 = _indexes.at(n + 2);
+                    isWide = _indexes.at(n + 3) == 1 ? true : false;
                 }
             }
 
@@ -151,10 +169,10 @@ void Tilemap::update() {
             quad[2].position = sf::Vector2f(i * 8 + tx2, (j + 1) * 16);
             quad[3].position = sf::Vector2f(i * 8, (j + 1) * 16);
 
-            quad[0].texCoords = sf::Vector2f(tx1 * 8, 0);
-            quad[1].texCoords = sf::Vector2f(tx1 * 8 + tx2, 0);
-            quad[2].texCoords = sf::Vector2f(tx1 * 8 + tx2, 16);
-            quad[3].texCoords = sf::Vector2f(tx1 * 8, 16);
+            quad[0].texCoords = sf::Vector2f(tx1 * 8, ty1 * 16);
+            quad[1].texCoords = sf::Vector2f(tx1 * 8 + tx2, ty1 * 16);
+            quad[2].texCoords = sf::Vector2f(tx1 * 8 + tx2, (ty1 + 1) * 16);
+            quad[3].texCoords = sf::Vector2f(tx1 * 8, (ty1 + 1) * 16);
 
             quad[0].color = fg;
             quad[1].color = fg;
