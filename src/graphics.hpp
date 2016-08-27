@@ -1,8 +1,18 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include <array>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+
+#include "main.hpp"
 #include "protocol.hpp"
+#include "runtime.hpp"
+#include "util.hpp"
 
 
 void writeBitmapPixel(std::vector<sf::Uint8> &pixels, bool isWhite);
@@ -20,7 +30,9 @@ public:
     int getHeight() const;
     Char& get(const int x, const int y);
     const Char& get(const int x, const int y) const;
+
     void resize(const int w, const int h);
+    void set(const int x, const int y, const std::string &data, const bool vertical = false);
 };
 
 class Tilemap: public sf::Drawable, public sf::Transformable {

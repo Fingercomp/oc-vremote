@@ -1,11 +1,4 @@
-#include <array>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <utility>
-
 #include "graphics.hpp"
-#include "util.hpp"
 
 
 void writeBitmapPixel(std::vector<sf::Uint8> &pixels, bool isWhite) {
@@ -113,7 +106,6 @@ const Char& Charmap::get(const int x, const int y) const {
 
 void Charmap::resize(const int w, const int h) {
     std::vector<Char> newChars;
-    fill(newChars, w * h);
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             Char chr;
@@ -134,6 +126,27 @@ int Charmap::getWidth() const {
 
 int Charmap::getHeight() const {
     return _h;
+}
+
+
+void Charmap::set(const int x, const int y, const std::string &data, const bool vertical) {
+    std::string::const_iterator begin = data.begin();
+    int i = 0;
+    while (begin != data.end()) {
+        int ix = x;
+        int iy = y;
+        if (vertical) {
+            iy += i;
+        } else {
+            ix += i;
+        }
+        sf::Uint32 codepoint;
+        begin = sf::Utf8::decode(begin, data.end(), codepoint);
+        Char &c = get(ix, iy);
+        c.c = codepoint;
+        c.fg = rtStgs::render::fg;
+        c.bg = rtStgs::render::bg;
+    }
 }
 
 

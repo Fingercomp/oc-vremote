@@ -2,9 +2,6 @@
 
 #include <queue>
 
-#include "graphics.hpp"
-#include "protocol.hpp"
-
 
 enum class State {
     // Non-threaded environment; initializing the program
@@ -21,25 +18,3 @@ enum class State {
     CLOSING
 };
 
-// The settings changed at runtime
-namespace rtStgs {
-    State state = State::INITIALIZING;
-    namespace msgQueue {
-        std::queue<NetMessage *> in;
-        std::queue<NetMessage *> out;
-    }
-    int port;
-    std::string user;
-    std::string password;
-    ConnectionMode connectionMode;
-    uint16_t pingInterval = 30;
-    namespace render {
-        uint8_t fg;
-        uint8_t bg;
-        Palette palette;
-        Resolution resolution;
-        bool screenState;
-        bool preciseMode;
-        Charmap chars(1, 1);
-    }
-}

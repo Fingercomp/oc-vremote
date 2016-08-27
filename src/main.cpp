@@ -3,8 +3,10 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "main.hpp"
 #include "graphics.hpp"
 #include "protocol.hpp"
+#include "runtime.hpp"
 #include "util.hpp"
 
 
@@ -17,10 +19,9 @@ int main() {
     fio.close();
     fistr = nullptr;
 
-    Charmap charmap(10, 10);
     Palette palette;
 
-    Tilemap tilemap(texture, charmap, indexes, palette);
+    Tilemap tilemap(texture, rtStgs::render::chars, indexes, palette);
 
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Test");
@@ -40,17 +41,25 @@ int main() {
                     break;
             }
         }
-        for (int i = 0; i < 10; ++i) {
-            for (int j = 0; j < 10; ++j) {
-                uint8_t cr = rand() % 255;
-                uint8_t cg = rand() % 255;
-                uint8_t cb = rand() % 255;
-                uint32_t chr = rand() % 0x8000;
-                Char c;
-                c.c = chr;
-                c.fg = palette.color2index(Color(cr, cg, cb));
-                charmap.get(i, j) = c;
-            }
+        switch (rtStgs::state) {
+            case State::INITIALIZING:
+                rtStgs::render::chars.set(1, 1, "Initializing...");
+                break;
+            case State::WAITING_FOR_CONNECTION:
+                rtStgs::render::chars.set(1, 1, "Waiting for connection...");
+                break;
+            case State::CONNECTION_ATTEMPT:
+                rtStgs::render::chars.set(1, 1, "A client has attempted to connect");
+                rtStgs::render::chars.set(1, 2, "Accept?");
+                break;
+            case State::AUTHORIZATION:
+                rtStgs::render::chars.set(1, 1, "The client is currently authorizating.");
+                rtStgs::render::chars.set(1, 2, "Please, wait.");
+                break;
+            case State::CONNECTED:
+                break;
+            case State::CLOSING:
+                break;
         }
         window.clear();
         tilemap.update();

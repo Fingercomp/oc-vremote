@@ -144,7 +144,7 @@ void networkThread() {
                             rtStgs::render::resolution = msg.resolution;
                             rtStgs::render::screenState = msg.screenState;
                             rtStgs::render::preciseMode = msg.preciseMode;
-                            rtStgs::render::chars = Charmap(msg.resolution.w, msg.resolution.h);
+                            rtStgs::render::chars.resize(msg.resolution.w, msg.resolution.h);
                             for (std::size_t i = 0; i < msg.chars.size(); ++i) {
                                 int x = i % msg.resolution.w;
                                 int y = i / msg.resolution.h;
@@ -384,6 +384,7 @@ void networkThread() {
                     rtStgs::msgQueue::out.pop();
                 }
             }
+            checkIsClosing();
         }
     } catch (closing &e) {
         // pass

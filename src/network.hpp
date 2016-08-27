@@ -9,6 +9,7 @@
 
 #include "main.hpp"
 #include "protocol.hpp"
+#include "runtime.hpp"
 
 
 class closing: public std::exception {
@@ -17,6 +18,9 @@ public:
     virtual const char* what() const noexcept;
 };
 
+
+bool receive(std::stringstream &str, sf::TcpSocket &socket);
+bool send(std::stringstream &str, sf::TcpSocket &socket, NetMessageCode opcode);
 
 inline void checkIsClosing();
 
