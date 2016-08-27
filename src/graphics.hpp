@@ -33,6 +33,8 @@ public:
 
     void resize(const int w, const int h);
     void set(const int x, const int y, const std::string &data, const bool vertical = false);
+    void copy(const int x, const int y, const int w, const int h, const int tx, const int ty);
+    void fill(const int x, const int y, const int w, const int h, const long chr);
 };
 
 class Tilemap: public sf::Drawable, public sf::Transformable {

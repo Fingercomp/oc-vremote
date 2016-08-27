@@ -150,6 +150,32 @@ void Charmap::set(const int x, const int y, const std::string &data, const bool 
     }
 }
 
+void Charmap::copy(const int x, const int y, const int w, const int h, const int tx, const int ty) {
+    std::vector<Char> copyRegion;
+    for (int j = y; j < y + h; ++j) {
+        for (int i = x; i < x + w; ++i) {
+            copyRegion.push_back(get(x, y));
+        }
+    }
+    for (int j = 0; j < h; ++j) {
+        for (int i = 0; i < w; ++i) {
+            get(tx + i, ty + j) = copyRegion.at(y * w + x);
+        }
+    }
+}
+
+void Charmap::fill(const int x, const int y, const int w, const int h, const long chr) {
+    Char c;
+    c.c = chr;
+    c.fg = rtStgs::render::fg;
+    c.bg = rtStgs::render::bg;
+    for (int j = y; j < y + h; ++j) {
+        for (int i = x; i < x + w; ++i) {
+            get(x, y) = c;
+        }
+    }
+}
+
 
 Tilemap::Tilemap(sf::Texture &texture, Charmap &charmap, std::vector<unsigned long> &indexes, Palette &palette):
         _charmap(charmap), _tileset(texture), _indexes(indexes), _palette(palette) {}

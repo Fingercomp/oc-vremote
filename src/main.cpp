@@ -41,6 +41,15 @@ int main() {
                     sf::FloatRect visibleArea(0, 0, static_cast<float>(event.size.width), static_cast<float>(event.size.height));
                     window.setView(sf::View(visibleArea));
                 }
+                case sf::Event::KeyPressed: {
+                    if (rtStgs::state == State::CONNECTION_ATTEMPT) {
+                        if (event.key.code == sf::Keyboard::Y) {
+                            rtStgs::state = State::AUTHORIZATION;
+                        } else if (event.key.code == sf::Keyboard::N) {
+                            rtStgs::state = State::WAITING_FOR_CONNECTION;
+                        }
+                    }
+                }
                 default:
                     break;
             }
@@ -54,7 +63,7 @@ int main() {
                 break;
             case State::CONNECTION_ATTEMPT:
                 rtStgs::render::chars.set(0, 0, "A client has attempted to connect");
-                rtStgs::render::chars.set(0, 1, "Accept?");
+                rtStgs::render::chars.set(0, 1, "Accept? [y/n]");
                 break;
             case State::AUTHORIZATION:
                 rtStgs::render::chars.set(0, 0, "The client is currently authorizating.");
