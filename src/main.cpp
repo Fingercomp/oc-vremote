@@ -1,10 +1,12 @@
 #include <fstream>
 #include <iostream>
+#include <thread>
 
 #include <SFML/Graphics.hpp>
 
-#include "main.hpp"
 #include "graphics.hpp"
+#include "main.hpp"
+#include "network.hpp"
 #include "protocol.hpp"
 #include "runtime.hpp"
 #include "util.hpp"
@@ -23,8 +25,9 @@ int main() {
 
     Tilemap tilemap(texture, rtStgs::render::chars, indexes, palette);
 
-
     sf::RenderWindow window(sf::VideoMode(800, 600), "Test");
+
+    std::thread thNet(networkThread);
 
     while (window.isOpen()) {
         sf::Event event;
@@ -32,6 +35,7 @@ int main() {
             switch (event.type) {
                 case sf::Event::Closed:
                     window.close();
+                    rtStgs::state = State::CLOSING;
                     break;
                 case sf::Event::Resized: {
                     sf::FloatRect visibleArea(0, 0, static_cast<float>(event.size.width), static_cast<float>(event.size.height));
@@ -66,4 +70,5 @@ int main() {
         window.draw(tilemap);
         window.display();
     }
+    thNet.join();
 }

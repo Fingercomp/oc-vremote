@@ -20,6 +20,10 @@ if(SFML_FOUND)
   target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})
 endif()
 
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+find_package(Threads REQUIRED)
+target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})
+
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
 set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 14)
