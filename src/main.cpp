@@ -43,18 +43,18 @@ int main() {
         }
         switch (rtStgs::state) {
             case State::INITIALIZING:
-                rtStgs::render::chars.set(1, 1, "Initializing...");
+                rtStgs::render::chars.set(0, 0, "Initializing...");
                 break;
             case State::WAITING_FOR_CONNECTION:
-                rtStgs::render::chars.set(1, 1, "Waiting for connection...");
+                rtStgs::render::chars.set(0, 0, "Waiting for connection...");
                 break;
             case State::CONNECTION_ATTEMPT:
-                rtStgs::render::chars.set(1, 1, "A client has attempted to connect");
-                rtStgs::render::chars.set(1, 2, "Accept?");
+                rtStgs::render::chars.set(0, 0, "A client has attempted to connect");
+                rtStgs::render::chars.set(0, 1, "Accept?");
                 break;
             case State::AUTHORIZATION:
-                rtStgs::render::chars.set(1, 1, "The client is currently authorizating.");
-                rtStgs::render::chars.set(1, 2, "Please, wait.");
+                rtStgs::render::chars.set(0, 0, "The client is currently authorizating.");
+                rtStgs::render::chars.set(0, 1, "Please, wait.");
                 break;
             case State::CONNECTED:
                 break;

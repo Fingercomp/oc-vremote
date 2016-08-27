@@ -146,6 +146,7 @@ void Charmap::set(const int x, const int y, const std::string &data, const bool 
         c.c = codepoint;
         c.fg = rtStgs::render::fg;
         c.bg = rtStgs::render::bg;
+        ++i;
     }
 }
 
