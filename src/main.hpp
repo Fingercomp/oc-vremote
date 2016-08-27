@@ -25,8 +25,8 @@ enum class State {
 namespace rtStgs {
     State state = State::INITIALIZING;
     namespace msgQueue {
-        std::queue<NetMessage> in;
-        std::queue<NetMessage> out;
+        std::queue<NetMessage *> in;
+        std::queue<NetMessage *> out;
     }
     int port;
     std::string user;
@@ -40,6 +40,6 @@ namespace rtStgs {
         Resolution resolution;
         bool screenState;
         bool preciseMode;
-        Charmap chars;
+        Charmap chars(1, 1);
     }
 }
