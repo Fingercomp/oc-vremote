@@ -48,7 +48,7 @@ int main() {
                         } else if (event.key.code == sf::Keyboard::N) {
                             rtStgs::state = State::WAITING_FOR_CONNECTION;
                         }
-                    }
+                    } else if (rtStgs::state == State::CONNECTED) {}
                 }
                 default:
                     break;
