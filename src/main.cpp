@@ -1,10 +1,12 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <queue>
 
 #include <SFML/Graphics.hpp>
 
 #include "graphics.hpp"
+#include "keyboard.hpp"
 #include "main.hpp"
 #include "network.hpp"
 #include "protocol.hpp"
@@ -26,8 +28,12 @@ int main() {
     Tilemap tilemap(texture, rtStgs::render::chars, indexes, palette);
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Test");
+    window.setKeyRepeatEnabled(false);
 
     std::thread thNet(networkThread);
+
+    std::queue<sf::Keyboard::Key> keyQueuePressed;
+    std::queue<sf::Keyboard::Key> keyQueueReleased;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -48,7 +54,49 @@ int main() {
                         } else if (event.key.code == sf::Keyboard::N) {
                             rtStgs::state = State::WAITING_FOR_CONNECTION;
                         }
-                    } else if (rtStgs::state == State::CONNECTED) {}
+                    } else if (rtStgs::state == State::CONNECTED) {
+                        keyQueuePressed.push(event.key.code);
+                        if (keyQueuePressed.size() > 1) {
+                            sf::Keyboard::Key k = keyQueuePressed.front();
+                            keyQueuePressed.pop();
+                            nmsg::NetMessageEventKeyDown msg;
+                            msg.cod = static_cast<long>(keymap.at(k));
+                            msg.chr = 0;
+                            rtStgs::msgQueue::out.push(&msg);
+                        }
+                    }
+                }
+                case sf::Event::KeyReleased: {
+                    if (rtStgs::state == State::CONNECTED) {
+                        if (keyQueueReleased.size() > 1) {
+                            sf::Keyboard::Key k = keyQueueReleased.front();
+                            keyQueueReleased.pop();
+                            nmsg::NetMessageEventKeyDown msg;
+                            msg.cod = static_cast<long>(keymap.at(k));
+                            msg.chr = 0;
+                            rtStgs::msgQueue::out.push(&msg);
+                        }
+                    }
+                }
+                case sf::Event::TextEntered: {
+                    if (rtStgs::state == State::CONNECTED) {
+                        sf::Keyboard::Key kdown = keyQueuePressed.front();
+                        sf::Keyboard::Key kup = keyQueueReleased.front();
+                        keyQueuePressed.pop();
+                        keyQueueReleased.pop();
+                        nmsg::NetMessageEventKeyDown msgdown;
+                        msgdown.cod = static_cast<long>(keymap.at(kdown));
+                        msgdown.chr = event.text.unicode;
+                        nmsg::NetMessageEventKeyUp msgup;
+                        msgup.cod = static_cast<long>(keymap.at(kup));
+                        if (kdown == kup) {
+                            msgup.chr = event.text.unicode;
+                        } else {
+                            msgup.chr = 0;
+                        }
+                        rtStgs::msgQueue::out.push(&msgdown);
+                        rtStgs::msgQueue::out.push(&msgup);
+                    }
                 }
                 default:
                     break;
