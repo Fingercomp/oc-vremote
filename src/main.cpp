@@ -197,6 +197,25 @@ int main() {
                         }
                     }
                 }
+                case sf::Event::MouseWheelScrolled: {
+                    if (rtStgs::state == State::CONNECTED) {
+                        if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
+                            sf::Vector2i point(event.mouseButton.x, event.mouseButton.y);
+                            sf::Vector2f pos = window.mapPixelToCoords(point);
+                            uint8_t x = static_cast<uint8_t>(pos.x);
+                            uint8_t y = static_cast<uint8_t>(pos.y);
+                            x /= 8;
+                            y /= 16;
+                            if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                                nmsg::NetMessageEventScroll msg;
+                                msg.x = x;
+                                msg.y = y;
+                                msg.direction = event.mouseWheelScroll.delta < 0 ? false : true;
+                                msg.delta = static_cast<uint8_t>(std::abs(event.mouseWheelScroll.delta));
+                            }
+                        }
+                    }
+                }
                 default:
                     break;
             }

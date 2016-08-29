@@ -192,7 +192,8 @@ namespace nmsg {
         NetMessageCode code = MSG_EVENT_SCROLL;
         uint8_t x;
         uint8_t y;
-        uint8_t direction;
+        bool direction;
+        uint8_t delta;
     };
 
     struct NetMessageEventKeyDown: public NetMessage {

@@ -217,6 +217,7 @@ std::stringstream& pack(std::stringstream &result, const nmsg::NetMessageEventSc
     pack(result, data.x);
     pack(result, data.y);
     pack(result, data.direction);
+    pack(result, data.delta);
     return result;
 }
 
@@ -450,6 +451,7 @@ void unpack(std::stringstream &str, nmsg::NetMessageEventScroll &result) {
     unpack(str, result.x);
     unpack(str, result.y);
     unpack(str, result.direction);
+    unpack(str, result.delta);
 }
 
 void unpack(std::stringstream &str, nmsg::NetMessageEventKeyDown &result) {
