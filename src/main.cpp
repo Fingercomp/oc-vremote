@@ -35,6 +35,8 @@ int main() {
     std::queue<sf::Keyboard::Key> keyQueuePressed;
     std::queue<sf::Keyboard::Key> keyQueueReleased;
 
+    bool wasDrag = false;
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -46,6 +48,7 @@ int main() {
                 case sf::Event::Resized: {
                     sf::FloatRect visibleArea(0, 0, static_cast<float>(event.size.width), static_cast<float>(event.size.height));
                     window.setView(sf::View(visibleArea));
+                    break;
                 }
                 case sf::Event::KeyPressed: {
                     if (rtStgs::state == State::CONNECTION_ATTEMPT) {
@@ -65,6 +68,7 @@ int main() {
                             rtStgs::msgQueue::out.push(&msg);
                         }
                     }
+                    break;
                 }
                 case sf::Event::KeyReleased: {
                     if (rtStgs::state == State::CONNECTED) {
@@ -77,6 +81,7 @@ int main() {
                             rtStgs::msgQueue::out.push(&msg);
                         }
                     }
+                    break;
                 }
                 case sf::Event::TextEntered: {
                     if (rtStgs::state == State::CONNECTED) {
@@ -96,6 +101,100 @@ int main() {
                         }
                         rtStgs::msgQueue::out.push(&msgdown);
                         rtStgs::msgQueue::out.push(&msgup);
+                    }
+                    break;
+                }
+                case sf::Event::MouseButtonPressed: {
+                    if (rtStgs::state == State::CONNECTED) {
+                        int button = -1;
+                        switch (event.mouseButton.button) {
+                            case sf::Mouse::Left:
+                                button = 1;
+                                break;
+                            case sf::Mouse::Right:
+                                button = -1;
+                                break;
+                            case sf::Mouse::Middle:
+                                button = 0;
+                                break;
+                            default:
+                                break;
+                        }
+                        if (button != -1) {
+                            sf::Vector2i point(event.mouseButton.x, event.mouseButton.y);
+                            sf::Vector2f pos = window.mapPixelToCoords(point);
+                            uint8_t x = static_cast<uint8_t>(pos.x);
+                            uint8_t y = static_cast<uint8_t>(pos.y);
+                            x /= 8;
+                            y /= 16;
+                            if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                                nmsg::NetMessageEventTouch msg;
+                                msg.x = x;
+                                msg.y = y;
+                                msg.button = button;
+                            }
+                        }
+                    }
+                }
+                case sf::Event::MouseMoved: {
+                    if (rtStgs::state == State::CONNECTED) {
+                        int button = -1;
+                        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                            button = 1;
+                        } else if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+                            button = -1;
+                        } else if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
+                            button = 0;
+                        }
+                        if (button != -1) {
+                            sf::Vector2i point(event.mouseMove.x, event.mouseMove.y);
+                            sf::Vector2f pos = window.mapPixelToCoords(point);
+                            uint8_t x = static_cast<uint8_t>(pos.x);
+                            uint8_t y = static_cast<uint8_t>(pos.y);
+                            x /= 8;
+                            y /= 16;
+                            if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                                nmsg::NetMessageEventDrag msg;
+                                msg.x = x;
+                                msg.y = y;
+                                msg.button = button;
+                                wasDrag = true;
+                            }
+                        }
+                    }
+                }
+                case sf::Event::MouseButtonReleased: {
+                    if (rtStgs::state == State::CONNECTED) {
+                        if (wasDrag) {
+                            int button = -1;
+                            switch (event.mouseButton.button) {
+                                case sf::Mouse::Left:
+                                    button = 1;
+                                    break;
+                                case sf::Mouse::Right:
+                                    button = -1;
+                                    break;
+                                case sf::Mouse::Middle:
+                                    button = 0;
+                                    break;
+                                default:
+                                    break;
+                            }
+                            if (button != -1) {
+                                sf::Vector2i point(event.mouseButton.x, event.mouseButton.y);
+                                sf::Vector2f pos = window.mapPixelToCoords(point);
+                                uint8_t x = static_cast<uint8_t>(pos.x);
+                                uint8_t y = static_cast<uint8_t>(pos.y);
+                                x /= 8;
+                                y /= 16;
+                                if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                                    nmsg::NetMessageEventDrop msg;
+                                    msg.x = x;
+                                    msg.y = y;
+                                    msg.button = button;
+                                }
+                            }
+                        }
                     }
                 }
                 default:
