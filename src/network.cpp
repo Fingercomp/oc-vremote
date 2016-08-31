@@ -5,47 +5,230 @@ const char* closing::what() const noexcept {
     return _data;
 }
 
+bool Socket::initialized = false;
+
+Socket::Socket(const std::string port) {
+    try {
+        Socket::init();
+        addrinfo basicInfo, *servInfo, *res;
+        memset(&basicInfo, 0, sizeof(basicInfo));
+        basicInfo.ai_family = AF_UNSPEC;
+        basicInfo.ai_socktype = SOCK_STREAM;
+        basicInfo.ai_flags = AI_PASSIVE;
+
+        int result;
+        int yes = 1;
+        if ((result = getaddrinfo(nullptr, port.c_str(), &basicInfo, &servInfo)) != 0) {
+            std::cerr << "Could not get address info: " << gai_strerror(result) << "\n";
+            freeaddrinfo(servInfo);
+            throw closing();
+        }
+
+        for (res = servInfo; res != nullptr; res = res->ai_next) {
+            if ((sockd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) {
+                std::cerr << "Could not create a socket on address, trying next one...\n";
+                continue;
+            }
+
+            if (setsockopt(sockd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))) {
+                std::cerr << "Could not set the socket options!\n";
+                freeaddrinfo(servInfo);
+                throw closing();
+            }
+
+            if (bind(sockd, res->ai_addr, res->ai_addrlen) == -1) {
+                disconnect();
+                std::cerr << "Could not bind the socket to the port\n";
+                continue;
+            }
+
+            break;
+        }
+        freeaddrinfo(servInfo);
+
+        if (res == nullptr) {
+            std::cerr << "Could not find the address to bind to.\n";
+            throw closing();
+        }
+
+        if (listen(sockd, 1) == -1) {
+            std::cerr << "Could not set a listener on the port.\n";
+            disconnect();
+            throw closing();
+        }
+        closed = false;
+    } catch (closing &e) {
+        sockd = -1;
+        closed = true;
+    }
+}
+
+Socket::Socket(const SOCKET sockd): sockd(sockd) {
+    Socket::init();
+    if (sockd < 0) {
+        closed = true;
+    }
+}
+
+Socket::~Socket() {
+    if (sockd >= 0) {
+        disconnect();
+    }
+}
+
+int Socket::disconnect() {
+    int status = 0;
+
+#ifdef _WIN32
+    status = shutdown(sockd, SF_BOTH);
+    if (status == 0) {
+        status = closesocket(sockd);
+    }
+#else
+    status = shutdown(sockd, SHUT_RDWR);
+    if (status == 0) {
+        status = close(sockd);
+    }
+#endif
+    closed = true;
+    return status;
+}
+
+int Socket::send(const std::string &data) {
+    std::size_t total = 0;
+    int bytesleft = data.size();
+    int n;
+
+    while (total < data.size()) {
+        n = ::send(sockd, data.c_str() + total, bytesleft, 0);
+        if (n == -1) {
+            return -1;
+        }
+
+        total += n;
+        bytesleft -= n;
+    }
+
+    return total;
+}
+
+int Socket::recv(std::string &strData, const int size, const int timeout) {
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(sockd, &readfds);
+    timeval to {timeout / 1000000, timeout % 1000000};
+    if (select(1, &readfds, nullptr, nullptr, &to) == 0) {
+        if (FD_ISSET(sockd, &readfds)) {
+            char *data = new char[size];
+            int got = 0;
+            int bytesleft = size;
+            int n;
+
+            while (got < size) {
+                n = ::recv(sockd, data + got, bytesleft, 0);
+                if (n == -1) {
+                    delete[] data;
+                    return -1;
+                } else if (n == 0) {
+                    closed = true;
+                    delete[] data;
+                    return 0;
+                }
+
+                got += n;
+                bytesleft -= n;
+            }
+
+            strData = std::string(data, size);
+            return got;
+        } else {
+            return -3;
+        }
+    } else {
+        return -2;
+    }
+}
+
+int Socket::accept(const int timeout, sockaddr_storage remoteaddr) {
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(sockd, &readfds);
+    timeval to {timeout / 1000000, timeout % 1000000};
+    if (select(1, &readfds, nullptr, nullptr, &to) == 0) {
+        if (FD_ISSET(sockd, &readfds)) {
+            socklen_t addrlen = sizeof(remoteaddr);
+            int clientd = ::accept(sockd, reinterpret_cast<sockaddr *>(&remoteaddr), &addrlen);
+            if (clientd == -1) {
+                return -1;
+            }
+            return clientd;
+        } else {
+            return -2;
+        }
+    } else {
+        return -3;
+    }
+}
+
+bool Socket::isClosed() const {
+    return closed;
+}
+
+int Socket::init() {
+    if (!Socket::initialized) {
+        Socket::initialized = true;
+#ifdef _WIN32
+        WSADATA wsaData;
+        return WSAStartup(MAKEWORD(1, 1), &wsaData);
+#else
+        return 0;
+#endif
+    }
+    return 0;
+}
+
+int Socket::uninit() {
+    if (Socket::initialized) {
+        Socket::initialized = false;
+#ifdef _WIN32
+        return WSACleanup();
+#else
+        return 0;
+#endif
+    }
+
+    return 0;
+}
+
+
 inline void checkIsClosing() {
     if (rtStgs::state == State::CLOSING) {
         throw closing();
     }
 }
 
-bool receive(std::stringstream &str, sf::TcpSocket &socket) {
-    char *data = new char[5];
-    std::size_t received;
-    sf::Socket::Status s = socket.receive(data, 4, received);
-    if (received != 4 || s != sf::Socket::Done) {
-        delete[] data;
+bool receiveMsg(std::stringstream &str, Socket &socket, int timeout) {
+    std::string strReceived;
+    std::size_t received = socket.recv(strReceived, 4, timeout);
+    if (received != 4) {
         return false;
     }
-    data[4] = '\0';
     std::stringstream strCopy;
-    str << data;
-    strCopy << data;
-    delete[] data;
+    str << strReceived;
+    strCopy << strReceived;
     NetMessageCode opcode;
     uint24_t len;
     unpack(strCopy, opcode);
     unpack(strCopy, len);
-    std::size_t receivedTotal = 0;
-    while (receivedTotal < len) {
-        std::size_t recLen = len - receivedTotal;
-        data = new char[recLen + 1];
-        sf::Socket::Status s = socket.receive(data, recLen, received);
-        if (s != sf::Socket::Partial || s != sf::Socket::Done) {
-            delete[] data;
-            return false;
-        }
-        receivedTotal += received;
-        data[recLen] = '\0';
-        str << data;
-        delete[] data;
+    strReceived.clear();
+    if (socket.recv(strReceived, len, timeout) == static_cast<int>(len)) {
+        return true;
+    } else {
+        return false;
     }
-    return true;
 }
 
-bool send(std::stringstream &str, sf::TcpSocket &socket, NetMessageCode opcode) {
+bool sendMsg(std::stringstream &str, Socket &socket, NetMessageCode opcode) {
     std::string sendString;
     while (!str.eof()) {
         char c = str.get();
@@ -55,51 +238,37 @@ bool send(std::stringstream &str, sf::TcpSocket &socket, NetMessageCode opcode) 
     pack(sendStr, opcode);
     pack(sendStr, static_cast<uint24_t>(sendString.size()));
     sendString = sendStr.str() + sendString;
-    const char *data = sendString.c_str();
-    std::size_t sentTotal = 0;
-    while (sentTotal != sendString.size()) {
-        std::size_t sent;
-        sf::Socket::Status s = socket.send(data + sentTotal, sendString.size() - sentTotal, sent);
-        switch (s) {
-            case sf::Socket::Done:
-            return true;
-            case sf::Socket::Partial:
-                sentTotal += sent;
-                break;
-            default:
-                return false;
-        }
+    if (socket.send(sendString) == static_cast<int>(sendString.size())) {
+        return true;
+    } else {
+        return false;
     }
-    return false;
 }
 
 
 void networkThread() {
     try {
         while (1) {
-            sf::TcpListener listener;
-            listener.setBlocking(false);
-
-            while (listener.listen(rtStgs::port) != sf::Socket::Done) {
-                checkIsClosing();
+            Socket listener(rtStgs::port);
+            if (!listener.isClosed()) {
+                rtStgs::state = State::WAITING_FOR_CONNECTION;
             }
 
-            rtStgs::state = State::WAITING_FOR_CONNECTION;
-
-            sf::TcpSocket socket;
+            sockaddr_storage remoteaddr;
+            int clientSockd = 0;
             while (rtStgs::state == State::WAITING_FOR_CONNECTION) {
                 checkIsClosing();
-                if (listener.accept(socket) == sf::Socket::Done) {
+                if ((clientSockd = listener.accept(500000, remoteaddr)) > 0) {
                     rtStgs::state = State::CONNECTION_ATTEMPT;
                     break;
                 }
             }
 
+            Socket socket(clientSockd);
+
             while (rtStgs::state == State::CONNECTION_ATTEMPT) {
                 checkIsClosing();
             }
-
-            socket.setBlocking(false);
 
             std::stringstream strIn;
             std::stringstream strOut;
@@ -107,7 +276,7 @@ void networkThread() {
             while (rtStgs::state == State::AUTHORIZATION) {
                 checkIsClosing();
                 strIn.str(std::string(""));
-                if (receive(strIn, socket)) {
+                if (receiveMsg(strIn, socket)) {
                     NetMessageCode opcode;
                     uint24_t len;
                     unpack(strIn, opcode);
@@ -131,7 +300,7 @@ void networkThread() {
                                 resp.displayString = "Hello :)";
                             }
                             pack(strOut, resp);
-                            send(strOut, socket, MSG_AUTH_SERVER);
+                            sendMsg(strOut, socket, MSG_AUTH_SERVER);
                             authed = true;
                         }
                     } else {
@@ -161,7 +330,7 @@ void networkThread() {
                 while (1) {
                     checkIsClosing();
                     strIn.str(std::string(""));
-                    if (receive(strIn, socket)) {
+                    if (receiveMsg(strIn, socket)) {
                         NetMessageCode opcode;
                         uint24_t len;
                         unpack(strIn, opcode);
@@ -261,7 +430,7 @@ void networkThread() {
                                 }
                                 std::stringstream strOut;
                                 pack(strOut, resp);
-                                send(strOut, socket, MSG_INITIAL_DATA);
+                                sendMsg(strOut, socket, MSG_INITIAL_DATA);
                                 break;
                             }
                             case MSG_EVENT_TOUCH: {
@@ -336,49 +505,49 @@ void networkThread() {
                             case MSG_ERROR: {
                                 nmsg::NetMessageError *msg = dynamic_cast<nmsg::NetMessageError *>(baseMsg);
                                 pack(strOut, *msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                             case MSG_EVENT_TOUCH: {
                                 nmsg::NetMessageEventTouch *msg = dynamic_cast<nmsg::NetMessageEventTouch *>(baseMsg);
                                 pack(strOut, msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                             case MSG_EVENT_DRAG: {
                                 nmsg::NetMessageEventDrag *msg = dynamic_cast<nmsg::NetMessageEventDrag *>(baseMsg);
                                 pack(strOut, msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                             case MSG_EVENT_DROP: {
                                 nmsg::NetMessageEventDrop *msg = dynamic_cast<nmsg::NetMessageEventDrop *>(baseMsg);
                                 pack(strOut, msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                             case MSG_EVENT_SCROLL: {
                                 nmsg::NetMessageEventScroll *msg = dynamic_cast<nmsg::NetMessageEventScroll *>(baseMsg);
                                 pack(strOut, msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                             case MSG_EVENT_KEY_DOWN: {
                                 nmsg::NetMessageEventKeyDown *msg = dynamic_cast<nmsg::NetMessageEventKeyDown *>(baseMsg);
                                 pack(strOut, msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                             case MSG_EVENT_KEY_UP: {
                                 nmsg::NetMessageEventKeyUp *msg = dynamic_cast<nmsg::NetMessageEventKeyUp *>(baseMsg);
                                 pack(strOut, msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                             case MSG_EVENT_CLIPBOARD: {
                                 nmsg::NetMessageEventClipboard *msg = dynamic_cast<nmsg::NetMessageEventClipboard *>(baseMsg);
                                 pack(strOut, msg);
-                                send(strOut, socket, baseMsg->code);
+                                sendMsg(strOut, socket, baseMsg->code);
                                 break;
                             }
                         }
