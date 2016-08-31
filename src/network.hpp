@@ -50,6 +50,7 @@ public:
     int recv(std::string &data, const int size, const int timeout);
     int accept(const int timeout, sockaddr_storage &remoteaddr);
     bool isClosed() const;
+    int getHandle() const;
 public:
     static int init();
     static int uninit();

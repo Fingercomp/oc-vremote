@@ -17,7 +17,7 @@ namespace rtStgs {
         extern std::queue<NetMessage *> in;
         extern std::queue<NetMessage *> out;
     }
-    extern int port;
+    extern std::string port;
     extern std::string user;
     extern std::string password;
     extern ConnectionMode connectionMode;

@@ -7,7 +7,7 @@ namespace rtStgs {
         std::queue<NetMessage *> in;
         std::queue<NetMessage *> out;
     }
-    int port = 44444;
+    std::string port = "44444";
     std::string user;
     std::string password;
     ConnectionMode connectionMode;
