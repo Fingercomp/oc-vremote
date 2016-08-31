@@ -48,7 +48,7 @@ public:
     int disconnect();
     int send(const std::string &data);
     int recv(std::string &data, const int size, const int timeout);
-    int accept(const int timeout, sockaddr_storage remoteaddr);
+    int accept(const int timeout, sockaddr_storage &remoteaddr);
     bool isClosed() const;
 public:
     static int init();
@@ -57,7 +57,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool receiveMsg(std::stringstream &str, Socket &socket);
+bool receiveMsg(std::stringstream &str, Socket &socket, int timeout);
 bool sendMsg(std::stringstream &str, Socket &socket, NetMessageCode opcode);
 
 inline void checkIsClosing();

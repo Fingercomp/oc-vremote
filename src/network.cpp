@@ -149,7 +149,7 @@ int Socket::recv(std::string &strData, const int size, const int timeout) {
     }
 }
 
-int Socket::accept(const int timeout, sockaddr_storage remoteaddr) {
+int Socket::accept(const int timeout, sockaddr_storage &remoteaddr) {
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(sockd, &readfds);
@@ -276,7 +276,7 @@ void networkThread() {
             while (rtStgs::state == State::AUTHORIZATION) {
                 checkIsClosing();
                 strIn.str(std::string(""));
-                if (receiveMsg(strIn, socket)) {
+                if (receiveMsg(strIn, socket, 250000)) {
                     NetMessageCode opcode;
                     uint24_t len;
                     unpack(strIn, opcode);
@@ -330,7 +330,7 @@ void networkThread() {
                 while (1) {
                     checkIsClosing();
                     strIn.str(std::string(""));
-                    if (receiveMsg(strIn, socket)) {
+                    if (receiveMsg(strIn, socket, 250000)) {
                         NetMessageCode opcode;
                         uint24_t len;
                         unpack(strIn, opcode);
