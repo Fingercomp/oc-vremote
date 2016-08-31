@@ -117,7 +117,7 @@ int Socket::recv(std::string &strData, const int size, const int timeout) {
     FD_ZERO(&readfds);
     FD_SET(sockd, &readfds);
     timeval to {timeout / 1000000, timeout % 1000000};
-    if (select(1, &readfds, nullptr, nullptr, &to) == 0) {
+    if (select(FD_SETSIZE, &readfds, nullptr, nullptr, &to) == 1) {
         if (FD_ISSET(sockd, &readfds)) {
             char *data = new char[size];
             int got = 0;
@@ -142,10 +142,10 @@ int Socket::recv(std::string &strData, const int size, const int timeout) {
             strData = std::string(data, size);
             return got;
         } else {
-            return -3;
+            return -2;
         }
     } else {
-        return -2;
+        return -3;
     }
 }
 
