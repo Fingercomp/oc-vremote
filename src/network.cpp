@@ -262,6 +262,7 @@ void networkThread() {
     try {
         while (1) {
             Socket listener(rtStgs::port);
+            checkIsClosing();
             if (!listener.isClosed()) {
                 rtStgs::state = State::WAITING_FOR_CONNECTION;
 
