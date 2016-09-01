@@ -30,6 +30,7 @@ int main() {
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Test");
     window.setKeyRepeatEnabled(false);
+    window.setFramerateLimit(30);
 
     std::thread thNet(networkThread);
 
@@ -127,7 +128,7 @@ int main() {
                             uint8_t y = static_cast<uint8_t>(pos.y);
                             x /= 8;
                             y /= 16;
-                            if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                            if (x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
                                 std::shared_ptr<nmsg::NetMessageEventTouch> msg = std::make_shared<nmsg::NetMessageEventTouch>();
                                 msg->x = x;
                                 msg->y = y;
@@ -154,7 +155,7 @@ int main() {
                             uint8_t y = static_cast<uint8_t>(pos.y);
                             x /= 8;
                             y /= 16;
-                            if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                            if (x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
                                 std::shared_ptr<nmsg::NetMessageEventDrag> msg = std::make_shared<nmsg::NetMessageEventDrag>();
                                 msg->x = x;
                                 msg->y = y;
@@ -189,7 +190,7 @@ int main() {
                                 uint8_t y = static_cast<uint8_t>(pos.y);
                                 x /= 8;
                                 y /= 16;
-                                if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                                if (x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
                                     std::shared_ptr<nmsg::NetMessageEventDrop> msg = std::make_shared<nmsg::NetMessageEventDrop>();
                                     msg->x = x;
                                     msg->y = y;
@@ -209,7 +210,7 @@ int main() {
                             uint8_t y = static_cast<uint8_t>(pos.y);
                             x /= 8;
                             y /= 16;
-                            if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
+                            if (x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
                                 std::shared_ptr<nmsg::NetMessageEventScroll> msg = std::make_shared<nmsg::NetMessageEventScroll>();
                                 msg->x = x;
                                 msg->y = y;
