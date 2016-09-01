@@ -12,42 +12,42 @@
 using uint24_t = uint32_t;
 
 enum NetMessageCode {
-    MSG_ERROR = 0,
-    MSG_AUTH_CLIENT = 1,
-    MSG_AUTH_SERVER = 2,
-    MSG_INITIAL_DATA = 3,
-    MSG_SET_BG = 4,
-    MSG_SET_FG = 5,
-    MSG_SET_PALETTE = 6,
-    MSG_SET_RESOLUTION = 7,
-    MSG_SET_CHARS = 8,
-    MSG_COPY = 9,
-    MSG_FILL = 10,
-    MSG_TURN_ON_OFF = 11,
-    MSG_SET_PRECISE = 12,
-    MSG_FETCH = 13,
-    MSG_EVENT_TOUCH = 14,
-    MSG_EVENT_DRAG = 15,
-    MSG_EVENT_DROP = 16,
-    MSG_EVENT_SCROLL = 17,
-    MSG_EVENT_KEY_DOWN = 18,
-    MSG_EVENT_KEY_UP = 19,
-    MSG_EVENT_CLIPBOARD = 20,
-    MSG_PING = 21,
-    MSG_PONG = 22
+    MSG_ERROR, // = 0
+    MSG_AUTH_CLIENT, // = 1
+    MSG_AUTH_SERVER, // = 2
+    MSG_INITIAL_DATA, // = 3
+    MSG_SET_BG, // = 4
+    MSG_SET_FG, // = 5
+    MSG_SET_PALETTE, // = 6
+    MSG_SET_RESOLUTION, // = 7
+    MSG_SET_CHARS, // = 8
+    MSG_COPY, // = 9
+    MSG_FILL, // = 10
+    MSG_TURN_ON_OFF, // = 11
+    MSG_SET_PRECISE, // = 12
+    MSG_FETCH, // = 13
+    MSG_EVENT_TOUCH, // = 14
+    MSG_EVENT_DRAG, // = 15
+    MSG_EVENT_DROP, // = 16
+    MSG_EVENT_SCROLL, // = 17
+    MSG_EVENT_KEY_DOWN, // = 18
+    MSG_EVENT_KEY_UP, // = 19
+    MSG_EVENT_CLIPBOARD, // = 20
+    MSG_PING, // = 21
+    MSG_PONG, // = 22
 };
 
 enum class ConnectionMode {
-    GpuKbd = 0,
-    Gpu = 1,
-    Kbd = 2,
-    Custom = 3
+    GpuKbd, // = 0
+    Gpu, // = 1
+    Kbd, // = 2
+    Custom, // = 3
 };
 
 enum class AuthResult {
-    Authenticated = 0,
-    WrongCredentials = 1,
-    UnsupportedMode = 2
+    Authenticated, // = 0
+    WrongCredentials, // = 1
+    UnsupportedMode, // = 2
 };
 
 struct Resolution {

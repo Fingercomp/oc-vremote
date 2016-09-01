@@ -112,7 +112,7 @@ void Charmap::resize(const int w, const int h) {
             if (x < _w && y < _h) {
                 chr = get(x, y);
             }
-            newChars.at(y * w + x) = chr;
+            newChars.push_back(chr);
         }
     }
     _chars = newChars;
@@ -171,7 +171,10 @@ void Charmap::fill(const int x, const int y, const int w, const int h, const lon
     c.bg = rtStgs::render::bg;
     for (int j = y; j < y + h; ++j) {
         for (int i = x; i < x + w; ++i) {
-            get(x, y) = c;
+            Char &cm = get(i, j);
+            cm.fg = c.fg;
+            cm.bg = c.bg;
+            cm.c = c.c;
         }
     }
 }

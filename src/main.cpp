@@ -54,7 +54,7 @@ int main() {
                 case sf::Event::KeyPressed: {
                     if (rtStgs::state == State::CONNECTION_ATTEMPT) {
                         if (event.key.code == sf::Keyboard::Y) {
-                            rtStgs::state = State::AUTHORIZATION;
+                            rtStgs::state = State::CONNECTED;
                         } else if (event.key.code == sf::Keyboard::N) {
                             rtStgs::state = State::WAITING_FOR_CONNECTION;
                         }
@@ -86,22 +86,24 @@ int main() {
                 }
                 case sf::Event::TextEntered: {
                     if (rtStgs::state == State::CONNECTED) {
-                        sf::Keyboard::Key kdown = keyQueuePressed.front();
-                        sf::Keyboard::Key kup = keyQueueReleased.front();
-                        keyQueuePressed.pop();
-                        keyQueueReleased.pop();
-                        std::shared_ptr<nmsg::NetMessageEventKeyDown> msgdown = std::make_shared<nmsg::NetMessageEventKeyDown>();
-                        msgdown->cod = static_cast<long>(keymap.at(kdown));
-                        msgdown->chr = event.text.unicode;
-                        std::shared_ptr<nmsg::NetMessageEventKeyUp> msgup = std::make_shared<nmsg::NetMessageEventKeyUp>();
-                        msgup->cod = static_cast<long>(keymap.at(kup));
-                        if (kdown == kup) {
-                            msgup->chr = event.text.unicode;
-                        } else {
-                            msgup->chr = 0;
+                        if (!keyQueuePressed.empty() && !keyQueueReleased.empty()) {
+                            sf::Keyboard::Key kdown = keyQueuePressed.front();
+                            sf::Keyboard::Key kup = keyQueueReleased.front();
+                            keyQueuePressed.pop();
+                            keyQueueReleased.pop();
+                            std::shared_ptr<nmsg::NetMessageEventKeyDown> msgdown = std::make_shared<nmsg::NetMessageEventKeyDown>();
+                            msgdown->cod = static_cast<long>(keymap.at(kdown));
+                            msgdown->chr = event.text.unicode;
+                            std::shared_ptr<nmsg::NetMessageEventKeyUp> msgup = std::make_shared<nmsg::NetMessageEventKeyUp>();
+                            msgup->cod = static_cast<long>(keymap.at(kup));
+                            if (kdown == kup) {
+                                msgup->chr = event.text.unicode;
+                            } else {
+                                msgup->chr = 0;
+                            }
+                            rtStgs::msgQueue::out.push(msgdown);
+                            rtStgs::msgQueue::out.push(msgup);
                         }
-                        rtStgs::msgQueue::out.push(msgdown);
-                        rtStgs::msgQueue::out.push(msgup);
                     }
                     break;
                 }

@@ -73,6 +73,7 @@ Socket::Socket(const std::string port) {
 
 Socket::Socket(const SOCKET sockd): sockd(sockd) {
     Socket::init();
+    closed = false;
     if (sockd < 0) {
         closed = true;
     }
@@ -163,7 +164,7 @@ int Socket::accept(const int timeout, sockaddr_storage &remoteaddr) {
     if (select(FD_SETSIZE, &readfds, nullptr, nullptr, &to) == 1) {
         if (FD_ISSET(sockd, &readfds)) {
             socklen_t addrlen = sizeof(remoteaddr);
-            int clientd = ::accept(sockd, reinterpret_cast<sockaddr *>(&remoteaddr), &addrlen);
+            SOCKET clientd = ::accept(sockd, reinterpret_cast<sockaddr *>(&remoteaddr), &addrlen);
             if (clientd == -1) {
                 return -1;
             }
@@ -232,6 +233,7 @@ bool receiveMsg(std::stringstream &str, Socket &socket, int timeout) {
     unpack(strCopy, len);
     strReceived.clear();
     if (socket.recv(strReceived, len, timeout) == static_cast<int>(len)) {
+        str << strReceived;
         return true;
     } else {
         return false;
@@ -269,21 +271,17 @@ void networkThread() {
                 while (rtStgs::state == State::WAITING_FOR_CONNECTION || rtStgs::state == State::TIMEOUT) {
                     checkIsClosing();
                     if ((clientSockd = listener.accept(500000, remoteaddr)) > 0) {
-                        rtStgs::state = State::CONNECTION_ATTEMPT;
+                        rtStgs::state = State::AUTHORIZATION;
                         break;
                     }
                 }
 
                 Socket socket(clientSockd);
 
-                while (rtStgs::state == State::CONNECTION_ATTEMPT) {
-                    checkIsClosing();
-                }
-
                 std::stringstream strIn;
                 std::stringstream strOut;
                 bool authed = false;
-                while (rtStgs::state == State::AUTHORIZATION) {
+                while (rtStgs::state == State::AUTHORIZATION && !socket.isClosed()) {
                     checkIsClosing();
                     strIn.str(std::string(""));
                     if (receiveMsg(strIn, socket, 250000)) {
@@ -326,248 +324,249 @@ void networkThread() {
                                 rtStgs::render::chars.resize(msg.resolution.w, msg.resolution.h);
                                 for (std::size_t i = 0; i < msg.chars.size(); ++i) {
                                     int x = i % msg.resolution.w;
-                                    int y = i / msg.resolution.h;
+                                    int y = i / msg.resolution.w;
                                     rtStgs::render::chars.get(x, y) = msg.chars.at(i);
                                 }
-                                rtStgs::state = State::CONNECTED;
+                                rtStgs::state = State::CONNECTION_ATTEMPT;
                             }
                         }
                     }
                 }
 
+                while (rtStgs::state == State::CONNECTION_ATTEMPT) {
+                    checkIsClosing();
+                }
 
-                if (rtStgs::state == State::CONNECTED) {
-                    while (rtStgs::state == State::CONNECTED) {
-                        checkIsClosing();
-                        strIn.str(std::string(""));
-                        if (receiveMsg(strIn, socket, 250000)) {
-                            NetMessageCode opcode;
-                            uint24_t len;
-                            unpack(strIn, opcode);
-                            unpack(strIn, len);
-                            switch (opcode) {
-                                case MSG_ERROR: {
-                                    nmsg::NetMessageError msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::state = State::WAITING_FOR_CONNECTION;
-                                    break;
-                                }
-                                case MSG_AUTH_CLIENT: {
-                                    nmsg::NetMessageAuthClient msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_AUTH_SERVER: {
-                                    nmsg::NetMessageAuthServer msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_INITIAL_DATA: {
-                                    nmsg::NetMessageInitialData msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_SET_BG: {
-                                    nmsg::NetMessageSetBG msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::bg = msg.index;
-                                    break;
-                                }
-                                case MSG_SET_FG: {
-                                    nmsg::NetMessageSetFG msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::fg = msg.index;
-                                    break;
-                                }
-                                case MSG_SET_PALETTE: {
-                                    nmsg::NetMessageSetPalette msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::palette[msg.index] = Color(msg.color);
-                                    break;
-                                }
-                                case MSG_SET_RESOLUTION: {
-                                    nmsg::NetMessageSetResolution msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::resolution.w = msg.w;
-                                    rtStgs::render::resolution.h = msg.h;
-                                    break;
-                                }
-                                case MSG_SET_CHARS: {
-                                    nmsg::NetMessageSetChars msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::chars.set(msg.x, msg.y, msg.chars, msg.vertical);
-                                    break;
-                                }
-                                case MSG_COPY: {
-                                    nmsg::NetMessageCopy msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::chars.copy(msg.x, msg.y, msg.w, msg.h, msg.tx, msg.ty);
-                                    break;
-                                }
-                                case MSG_FILL: {
-                                    nmsg::NetMessageFill msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::chars.fill(msg.x, msg.y, msg.w, msg.h, msg.c);
-                                    break;
-                                }
-                                case MSG_TURN_ON_OFF: {
-                                    nmsg::NetMessageTurnOnOff msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::screenState = msg.on;
-                                    break;
-                                }
-                                case MSG_SET_PRECISE: {
-                                    nmsg::NetMessageSetPrecise msg;
-                                    unpack(strIn, msg);
-                                    rtStgs::render::preciseMode = msg.precise;
-                                    break;
-                                }
-                                case MSG_FETCH: {
-                                    nmsg::NetMessageFetch msg;
-                                    unpack(strIn, msg);
-                                    nmsg::NetMessageInitialData resp;
-                                    resp.palette = rtStgs::render::palette;
-                                    resp.fg = rtStgs::render::fg;
-                                    resp.bg = rtStgs::render::bg;
-                                    resp.resolution = rtStgs::render::resolution;
-                                    resp.screenState = rtStgs::render::screenState;
-                                    resp.preciseMode = rtStgs::render::preciseMode;
-                                    for (int y = 0; y < resp.resolution.h; ++y) {
-                                        for (int x = 0; x < resp.resolution.w; ++x) {
-                                            Char &c = rtStgs::render::chars.get(x, y);
-                                            resp.chars.push_back(c);
-                                        }
+                while (rtStgs::state == State::CONNECTED && !socket.isClosed()) {
+                    checkIsClosing();
+                    strIn.str(std::string(""));
+                    if (receiveMsg(strIn, socket, 250000)) {
+                        NetMessageCode opcode;
+                        uint24_t len;
+                        unpack(strIn, opcode);
+                        unpack(strIn, len);
+                        switch (opcode) {
+                            case MSG_ERROR: {
+                                nmsg::NetMessageError msg;
+                                unpack(strIn, msg);
+                                rtStgs::state = State::WAITING_FOR_CONNECTION;
+                                break;
+                            }
+                            case MSG_AUTH_CLIENT: {
+                                nmsg::NetMessageAuthClient msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_AUTH_SERVER: {
+                                nmsg::NetMessageAuthServer msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_INITIAL_DATA: {
+                                nmsg::NetMessageInitialData msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_SET_BG: {
+                                nmsg::NetMessageSetBG msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::bg = msg.index;
+                                break;
+                            }
+                            case MSG_SET_FG: {
+                                nmsg::NetMessageSetFG msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::fg = msg.index;
+                                break;
+                            }
+                            case MSG_SET_PALETTE: {
+                                nmsg::NetMessageSetPalette msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::palette[msg.index] = Color(msg.color);
+                                break;
+                            }
+                            case MSG_SET_RESOLUTION: {
+                                nmsg::NetMessageSetResolution msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::resolution.w = msg.w;
+                                rtStgs::render::resolution.h = msg.h;
+                                break;
+                            }
+                            case MSG_SET_CHARS: {
+                                nmsg::NetMessageSetChars msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::chars.set(msg.x, msg.y, msg.chars, msg.vertical);
+                                break;
+                            }
+                            case MSG_COPY: {
+                                nmsg::NetMessageCopy msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::chars.copy(msg.x, msg.y, msg.w, msg.h, msg.tx, msg.ty);
+                                break;
+                            }
+                            case MSG_FILL: {
+                                nmsg::NetMessageFill msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::chars.fill(msg.x, msg.y, msg.w, msg.h, msg.c);
+                                break;
+                            }
+                            case MSG_TURN_ON_OFF: {
+                                nmsg::NetMessageTurnOnOff msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::screenState = msg.on;
+                                break;
+                            }
+                            case MSG_SET_PRECISE: {
+                                nmsg::NetMessageSetPrecise msg;
+                                unpack(strIn, msg);
+                                rtStgs::render::preciseMode = msg.precise;
+                                break;
+                            }
+                            case MSG_FETCH: {
+                                nmsg::NetMessageFetch msg;
+                                unpack(strIn, msg);
+                                nmsg::NetMessageInitialData resp;
+                                resp.palette = rtStgs::render::palette;
+                                resp.fg = rtStgs::render::fg;
+                                resp.bg = rtStgs::render::bg;
+                                resp.resolution = rtStgs::render::resolution;
+                                resp.screenState = rtStgs::render::screenState;
+                                resp.preciseMode = rtStgs::render::preciseMode;
+                                for (int y = 0; y < resp.resolution.h; ++y) {
+                                    for (int x = 0; x < resp.resolution.w; ++x) {
+                                        Char &c = rtStgs::render::chars.get(x, y);
+                                        resp.chars.push_back(c);
                                     }
-                                    std::stringstream strOut;
-                                    pack(strOut, resp);
-                                    sendMsg(strOut, socket, MSG_INITIAL_DATA);
-                                    break;
                                 }
-                                case MSG_EVENT_TOUCH: {
-                                    nmsg::NetMessageEventTouch msg;
-                                    unpack(strIn, msg);
-                                    break;
+                                std::stringstream strOut;
+                                pack(strOut, resp);
+                                sendMsg(strOut, socket, MSG_INITIAL_DATA);
+                                break;
+                            }
+                            case MSG_EVENT_TOUCH: {
+                                nmsg::NetMessageEventTouch msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_EVENT_DRAG: {
+                                nmsg::NetMessageEventDrag msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_EVENT_DROP: {
+                                nmsg::NetMessageEventDrop msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_EVENT_SCROLL: {
+                                nmsg::NetMessageEventScroll msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_EVENT_KEY_DOWN: {
+                                nmsg::NetMessageEventKeyDown msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_EVENT_KEY_UP: {
+                                nmsg::NetMessageEventKeyUp msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_EVENT_CLIPBOARD: {
+                                nmsg::NetMessageEventClipboard msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_PING: {
+                                nmsg::NetMessagePing msg;
+                                unpack(strIn, msg);
+                                break;
+                            }
+                            case MSG_PONG: {
+                                nmsg::NetMessagePong msg;
+                                unpack(strIn, msg);
+                                if (msg.pong == rtStgs::ping::challenge) {
+                                    rtStgs::ping::sent = false;
+                                    rtStgs::ping::challenge = 0;
+                                    rtStgs::ping::clock::clock.restart();
+                                    rtStgs::ping::clock::timeout.restart();
                                 }
-                                case MSG_EVENT_DRAG: {
-                                    nmsg::NetMessageEventDrag msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_EVENT_DROP: {
-                                    nmsg::NetMessageEventDrop msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_EVENT_SCROLL: {
-                                    nmsg::NetMessageEventScroll msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_EVENT_KEY_DOWN: {
-                                    nmsg::NetMessageEventKeyDown msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_EVENT_KEY_UP: {
-                                    nmsg::NetMessageEventKeyUp msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_EVENT_CLIPBOARD: {
-                                    nmsg::NetMessageEventClipboard msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_PING: {
-                                    nmsg::NetMessagePing msg;
-                                    unpack(strIn, msg);
-                                    break;
-                                }
-                                case MSG_PONG: {
-                                    nmsg::NetMessagePong msg;
-                                    unpack(strIn, msg);
-                                    if (msg.pong == rtStgs::ping::challenge) {
-                                        rtStgs::ping::sent = false;
-                                        rtStgs::ping::challenge = 0;
-                                        rtStgs::ping::clock::clock.restart();
-                                        rtStgs::ping::clock::timeout.restart();
-                                    }
-                                    break;
-                                }
+                                break;
                             }
                         }
-                        // Send messages in the queue
-                        while (!rtStgs::msgQueue::out.empty()) {
-                            strOut.str(std::string(""));
-                            NetMessage *baseMsg = rtStgs::msgQueue::out.front().get();
-                            switch (baseMsg->code) {
-                                case MSG_AUTH_CLIENT:
-                                case MSG_AUTH_SERVER:
-                                case MSG_INITIAL_DATA:
-                                case MSG_SET_BG:
-                                case MSG_SET_FG:
-                                case MSG_SET_PALETTE:
-                                case MSG_SET_RESOLUTION:
-                                case MSG_SET_CHARS:
-                                case MSG_COPY:
-                                case MSG_FILL:
-                                case MSG_TURN_ON_OFF:
-                                case MSG_SET_PRECISE:
-                                case MSG_FETCH:
-                                case MSG_PING:
-                                case MSG_PONG:
-                                    break;
-                                case MSG_ERROR: {
-                                    nmsg::NetMessageError *msg = dynamic_cast<nmsg::NetMessageError *>(baseMsg);
-                                    pack(strOut, *msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
-                                case MSG_EVENT_TOUCH: {
-                                    nmsg::NetMessageEventTouch *msg = dynamic_cast<nmsg::NetMessageEventTouch *>(baseMsg);
-                                    pack(strOut, msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
-                                case MSG_EVENT_DRAG: {
-                                    nmsg::NetMessageEventDrag *msg = dynamic_cast<nmsg::NetMessageEventDrag *>(baseMsg);
-                                    pack(strOut, msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
-                                case MSG_EVENT_DROP: {
-                                    nmsg::NetMessageEventDrop *msg = dynamic_cast<nmsg::NetMessageEventDrop *>(baseMsg);
-                                    pack(strOut, msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
-                                case MSG_EVENT_SCROLL: {
-                                    nmsg::NetMessageEventScroll *msg = dynamic_cast<nmsg::NetMessageEventScroll *>(baseMsg);
-                                    pack(strOut, msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
-                                case MSG_EVENT_KEY_DOWN: {
-                                    nmsg::NetMessageEventKeyDown *msg = dynamic_cast<nmsg::NetMessageEventKeyDown *>(baseMsg);
-                                    pack(strOut, msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
-                                case MSG_EVENT_KEY_UP: {
-                                    nmsg::NetMessageEventKeyUp *msg = dynamic_cast<nmsg::NetMessageEventKeyUp *>(baseMsg);
-                                    pack(strOut, msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
-                                case MSG_EVENT_CLIPBOARD: {
-                                    nmsg::NetMessageEventClipboard *msg = dynamic_cast<nmsg::NetMessageEventClipboard *>(baseMsg);
-                                    pack(strOut, msg);
-                                    sendMsg(strOut, socket, baseMsg->code);
-                                    break;
-                                }
+                    }
+                    // Send messages in the queue
+                    while (!rtStgs::msgQueue::out.empty()) {
+                        strOut.str(std::string(""));
+                        NetMessage *baseMsg = rtStgs::msgQueue::out.front().get();
+                        switch (baseMsg->code) {
+                            case MSG_AUTH_CLIENT:
+                            case MSG_AUTH_SERVER:
+                            case MSG_INITIAL_DATA:
+                            case MSG_SET_BG:
+                            case MSG_SET_FG:
+                            case MSG_SET_PALETTE:
+                            case MSG_SET_RESOLUTION:
+                            case MSG_SET_CHARS:
+                            case MSG_COPY:
+                            case MSG_FILL:
+                            case MSG_TURN_ON_OFF:
+                            case MSG_SET_PRECISE:
+                            case MSG_FETCH:
+                            case MSG_PING:
+                            case MSG_PONG:
+                                break;
+                            case MSG_ERROR: {
+                                nmsg::NetMessageError *msg = dynamic_cast<nmsg::NetMessageError *>(baseMsg);
+                                pack(strOut, *msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
                             }
-                            rtStgs::msgQueue::out.pop();
+                            case MSG_EVENT_TOUCH: {
+                                nmsg::NetMessageEventTouch *msg = dynamic_cast<nmsg::NetMessageEventTouch *>(baseMsg);
+                                pack(strOut, msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
+                            }
+                            case MSG_EVENT_DRAG: {
+                                nmsg::NetMessageEventDrag *msg = dynamic_cast<nmsg::NetMessageEventDrag *>(baseMsg);
+                                pack(strOut, msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
+                            }
+                            case MSG_EVENT_DROP: {
+                                nmsg::NetMessageEventDrop *msg = dynamic_cast<nmsg::NetMessageEventDrop *>(baseMsg);
+                                pack(strOut, msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
+                            }
+                            case MSG_EVENT_SCROLL: {
+                                nmsg::NetMessageEventScroll *msg = dynamic_cast<nmsg::NetMessageEventScroll *>(baseMsg);
+                                pack(strOut, msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
+                            }
+                            case MSG_EVENT_KEY_DOWN: {
+                                nmsg::NetMessageEventKeyDown *msg = dynamic_cast<nmsg::NetMessageEventKeyDown *>(baseMsg);
+                                pack(strOut, msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
+                            }
+                            case MSG_EVENT_KEY_UP: {
+                                nmsg::NetMessageEventKeyUp *msg = dynamic_cast<nmsg::NetMessageEventKeyUp *>(baseMsg);
+                                pack(strOut, msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
+                            }
+                            case MSG_EVENT_CLIPBOARD: {
+                                nmsg::NetMessageEventClipboard *msg = dynamic_cast<nmsg::NetMessageEventClipboard *>(baseMsg);
+                                pack(strOut, msg);
+                                sendMsg(strOut, socket, baseMsg->code);
+                                break;
+                            }
                         }
+                        rtStgs::msgQueue::out.pop();
                     }
                 }
                 checkIsClosing();
