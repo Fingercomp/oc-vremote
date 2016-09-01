@@ -127,19 +127,17 @@ int Socket::recv(std::string &strData, const int size, const int timeout) {
     timeval to {timeout / 1000000, timeout % 1000000};
     if (select(FD_SETSIZE, &readfds, nullptr, nullptr, &to) == 1) {
         if (FD_ISSET(sockd, &readfds)) {
-            char *data = new char[size];
+            std::unique_ptr<char> data(new char[size]);
             int got = 0;
             int bytesleft = size;
             int n;
 
             while (got < size) {
-                n = ::recv(sockd, data + got, bytesleft, 0);
+                n = ::recv(sockd, data.get() + got, bytesleft, 0);
                 if (n == -1) {
-                    delete[] data;
                     return -1;
                 } else if (n == 0) {
                     closed = true;
-                    delete[] data;
                     return 0;
                 }
 
@@ -147,7 +145,7 @@ int Socket::recv(std::string &strData, const int size, const int timeout) {
                 bytesleft -= n;
             }
 
-            strData = std::string(data, size);
+            strData = std::string(data.get(), size);
             return got;
         } else {
             return -2;
@@ -268,7 +266,7 @@ void networkThread() {
 
                 sockaddr_storage remoteaddr;
                 int clientSockd = 0;
-                while (rtStgs::state == State::WAITING_FOR_CONNECTION) {
+                while (rtStgs::state == State::WAITING_FOR_CONNECTION || rtStgs::state == State::TIMEOUT) {
                     checkIsClosing();
                     if ((clientSockd = listener.accept(500000, remoteaddr)) > 0) {
                         rtStgs::state = State::CONNECTION_ATTEMPT;
@@ -303,7 +301,7 @@ void networkThread() {
                                     resp.displayString = "Unsupported connection mode";
                                 } else {
                                     if (msg.pingInterval >= 30 && msg.pingInterval < 120) {
-                                        rtStgs::pingInterval = msg.pingInterval;
+                                        rtStgs::ping::interval = msg.pingInterval;
                                     }
                                     rtStgs::user = msg.user;
                                     rtStgs::password = msg.password;
@@ -339,7 +337,7 @@ void networkThread() {
 
 
                 if (rtStgs::state == State::CONNECTED) {
-                    while (1) {
+                    while (rtStgs::state == State::CONNECTED) {
                         checkIsClosing();
                         strIn.str(std::string(""));
                         if (receiveMsg(strIn, socket, 250000)) {
@@ -488,7 +486,12 @@ void networkThread() {
                                 case MSG_PONG: {
                                     nmsg::NetMessagePong msg;
                                     unpack(strIn, msg);
-                                    // TODO: ping the client
+                                    if (msg.pong == rtStgs::ping::challenge) {
+                                        rtStgs::ping::sent = false;
+                                        rtStgs::ping::challenge = 0;
+                                        rtStgs::ping::clock::clock.restart();
+                                        rtStgs::ping::clock::timeout.restart();
+                                    }
                                     break;
                                 }
                             }

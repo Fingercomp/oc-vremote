@@ -38,8 +38,6 @@ int main() {
 
     bool wasDrag = false;
 
-    sf::Clock clock;
-
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -228,36 +226,65 @@ int main() {
         }
         switch (rtStgs::state) {
             case State::INITIALIZING:
+                rtStgs::render::fg = 255;
+                rtStgs::render::bg = 16;
+                rtStgs::render::chars.fill(0, 0, rtStgs::render::resolution.w, rtStgs::render::resolution.h, 32);
                 rtStgs::render::chars.set(0, 0, "Initializing...");
                 break;
             case State::WAITING_FOR_CONNECTION:
+                rtStgs::render::fg = 255;
+                rtStgs::render::bg = 16;
+                rtStgs::render::chars.fill(0, 0, rtStgs::render::resolution.w, rtStgs::render::resolution.h, 32);
                 rtStgs::render::chars.set(0, 0, "Waiting for connection...");
                 break;
             case State::CONNECTION_ATTEMPT:
+                rtStgs::render::fg = 255;
+                rtStgs::render::bg = 16;
+                rtStgs::render::chars.fill(0, 0, rtStgs::render::resolution.w, rtStgs::render::resolution.h, 32);
                 rtStgs::render::chars.set(0, 0, "A client has attempted to connect");
                 rtStgs::render::chars.set(0, 1, "Accept? [y/n]");
                 break;
             case State::AUTHORIZATION:
+                rtStgs::render::fg = 255;
+                rtStgs::render::bg = 16;
+                rtStgs::render::chars.fill(0, 0, rtStgs::render::resolution.w, rtStgs::render::resolution.h, 32);
                 rtStgs::render::chars.set(0, 0, "The client is currently authorizating.");
                 rtStgs::render::chars.set(0, 1, "Please, wait.");
-                clock.restart();
+                rtStgs::ping::clock::clock.restart();
                 break;
             case State::CONNECTED:
-                if (clock.getElapsedTime() >= sf::seconds(rtStgs::pingInterval)) {
+                if (!rtStgs::ping::sent && rtStgs::ping::clock::clock.getElapsedTime() >= sf::seconds(rtStgs::ping::interval)) {
                     std::shared_ptr<nmsg::NetMessagePing> msg = std::make_shared<nmsg::NetMessagePing>();
                     // XXX: it that random enough?
-                    msg->ping = 0xffffffffffffffff ^ (rtStgs::pingInterval << 4) ^ clock.getElapsedTime().asMicroseconds() ^ (rand() % 0xffffffffffffffff);
+                    msg->ping = (0xffffffffffffffff ^ (rtStgs::ping::interval << 4) ^ rtStgs::ping::clock::clock.getElapsedTime().asMicroseconds() ^ (rand() % 0xffffffffffffffff)) & 0xffffffffffffffff;
+                    rtStgs::ping::challenge = msg->ping;
                     rtStgs::msgQueue::out.push(msg);
-                    clock.restart();
+                    rtStgs::ping::clock::clock.restart();
+                    rtStgs::ping::clock::timeout.restart();
+                    rtStgs::ping::sent = true;
+                }
+                if (rtStgs::ping::sent && rtStgs::ping::clock::timeout.getElapsedTime() >= sf::seconds(30)) {
+                    rtStgs::state = State::TIMEOUT;
+                    rtStgs::ping::sent = false;
+                    rtStgs::ping::clock::clock.restart();
+                    rtStgs::ping::clock::timeout.restart();
                 }
                 break;
             case State::CLOSING:
                 window.close();
                 break;
             case State::ERROR:
+                rtStgs::render::fg = 255;
+                rtStgs::render::bg = 16;
                 rtStgs::render::chars.fill(0, 0, rtStgs::render::resolution.w, rtStgs::render::resolution.h, 32);
                 rtStgs::render::chars.set(0, 0, "An error has occured.");
                 rtStgs::render::chars.set(0, 1, "See console output for more details.");
+                break;
+            case State::TIMEOUT:
+                rtStgs::render::fg = 255;
+                rtStgs::render::bg = 16;
+                rtStgs::render::chars.fill(0, 0, rtStgs::render::resolution.w, rtStgs::render::resolution.h, 32);
+                rtStgs::render::chars.set(0, 0, "The client has timed out.");
                 break;
         }
         window.clear();

@@ -7,11 +7,21 @@ namespace rtStgs {
         std::queue<std::shared_ptr<NetMessage>> in;
         std::queue<std::shared_ptr<NetMessage>> out;
     }
-    std::string port = "44444";
+    // This port was choosen at random.
+    // https://i.imgur.com/WiC1Rhi.png
+    std::string port = "39139";
     std::string user;
     std::string password;
     ConnectionMode connectionMode;
-    uint16_t pingInterval = 30;
+    namespace ping {
+        uint16_t interval = 30;
+        bool sent = false;
+        uint64_t challenge = 0;
+        namespace clock {
+            sf::Clock clock;
+            sf::Clock timeout;
+        }
+    }
     namespace render {
         uint8_t fg = 255;
         uint8_t bg = 16;

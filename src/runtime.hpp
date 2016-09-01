@@ -4,6 +4,8 @@
 #include <queue>
 #include <string>
 
+#include <SFML/System.hpp>
+
 #include "main.hpp"
 #include "graphics.hpp"
 #include "protocol.hpp"
@@ -22,7 +24,15 @@ namespace rtStgs {
     extern std::string user;
     extern std::string password;
     extern ConnectionMode connectionMode;
-    extern uint16_t pingInterval;
+    namespace ping {
+        extern uint16_t interval;
+        extern bool sent;
+        extern uint64_t challenge;
+        namespace clock {
+            extern sf::Clock clock;
+            extern sf::Clock timeout;
+        }
+    }
     namespace render {
         extern uint8_t fg;
         extern uint8_t bg;

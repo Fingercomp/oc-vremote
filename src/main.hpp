@@ -17,6 +17,8 @@ enum class State {
     // Threaded environment; signalling threads to end
     CLOSING,
     // Threaded environment; some critical error occured, e.g., could not set up a listener
-    ERROR
+    ERROR,
+    // Threaded environment; a client hasn't responded to the Ping message in time
+    TIMEOUT
 };
 
