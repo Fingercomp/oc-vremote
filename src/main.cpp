@@ -43,7 +43,6 @@ int main() {
             switch (event.type) {
                 case sf::Event::Closed:
                     window.close();
-                    rtStgs::state = State::CLOSING;
                     break;
                 case sf::Event::Resized: {
                     sf::FloatRect visibleArea(0, 0, static_cast<float>(event.size.width), static_cast<float>(event.size.height));
@@ -238,6 +237,12 @@ int main() {
             case State::CONNECTED:
                 break;
             case State::CLOSING:
+                window.close();
+                break;
+            case State::ERROR:
+                rtStgs::render::chars.fill(0, 0, rtStgs::render::resolution.w, rtStgs::render::resolution.h, 32);
+                rtStgs::render::chars.set(0, 0, "An error has occured.");
+                rtStgs::render::chars.set(0, 1, "See console output for more details.");
                 break;
         }
         window.clear();
@@ -245,5 +250,7 @@ int main() {
         window.draw(tilemap);
         window.display();
     }
+    // Just to be on the safe side ;)
+    rtStgs::state = State::CLOSING;
     thNet.join();
 }

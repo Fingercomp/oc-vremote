@@ -15,6 +15,8 @@ enum class State {
     // Threaded environment; a client connected and authorized, exchaning the data
     CONNECTED,
     // Threaded environment; signalling threads to end
-    CLOSING
+    CLOSING,
+    // Threaded environment; some critical error occured, e.g., could not set up a listener
+    ERROR
 };
 

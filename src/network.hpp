@@ -32,6 +32,14 @@ using SOCKET = int;
 class closing: public std::exception {
     const char _data[21] = "Closing the program";
 public:
+    closing();
+    virtual const char* what() const noexcept;
+};
+
+class error_occured: public std::exception {
+    const char _data[22] = "An error has occured";
+public:
+    error_occured();
     virtual const char* what() const noexcept;
 };
 

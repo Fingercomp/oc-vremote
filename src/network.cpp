@@ -1,7 +1,15 @@
 #include "network.hpp"
 
 
+closing::closing() {}
+
 const char* closing::what() const noexcept {
+    return _data;
+}
+
+error_occured::error_occured() {}
+
+const char* error_occured::what() const noexcept {
     return _data;
 }
 
@@ -21,7 +29,7 @@ Socket::Socket(const std::string port) {
         if ((result = getaddrinfo(nullptr, port.c_str(), &basicInfo, &servInfo)) != 0) {
             std::cerr << "Could not get address info: " << gai_strerror(result) << "\n";
             freeaddrinfo(servInfo);
-            throw closing();
+            throw error_occured();
         }
 
         for (res = servInfo; res != nullptr; res = res->ai_next) {
@@ -33,7 +41,7 @@ Socket::Socket(const std::string port) {
             if (setsockopt(sockd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))) {
                 std::cerr << "Could not set the socket options!\n";
                 freeaddrinfo(servInfo);
-                throw closing();
+                throw error_occured();
             }
 
             if (bind(sockd, res->ai_addr, res->ai_addrlen) == -1) {
@@ -48,16 +56,16 @@ Socket::Socket(const std::string port) {
 
         if (res == nullptr) {
             std::cerr << "Could not find the address to bind to.\n";
-            throw closing();
+            throw error_occured();
         }
 
         if (listen(sockd, 10) == -1) {
             std::cerr << "Could not set a listener on the port.\n";
             disconnect();
-            throw closing();
+            throw error_occured();
         }
         closed = false;
-    } catch (closing &e) {
+    } catch (error_occured &e) {
         sockd = -1;
         closed = true;
     }
@@ -561,9 +569,13 @@ void networkThread() {
                 checkIsClosing();
             } else {
                 std::cerr << "Could not create a listener!\n";
+                throw error_occured();
             }
         }
     } catch (closing &e) {
         // pass
+    } catch (error_occured &e) {
+        rtStgs::state = State::ERROR;
+        std::cerr << "Network thread terminated.\n";
     }
 }
