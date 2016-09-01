@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
+#include <memory>
 #include <queue>
+#include <string>
 
 #include "main.hpp"
 #include "graphics.hpp"
@@ -14,8 +15,8 @@ class Charmap;
 namespace rtStgs {
     extern State state;
     namespace msgQueue {
-        extern std::queue<NetMessage *> in;
-        extern std::queue<NetMessage *> out;
+        extern std::queue<std::shared_ptr<NetMessage>> in;
+        extern std::queue<std::shared_ptr<NetMessage>> out;
     }
     extern std::string port;
     extern std::string user;

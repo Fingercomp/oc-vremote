@@ -4,8 +4,8 @@
 namespace rtStgs {
     State state = State::INITIALIZING;
     namespace msgQueue {
-        std::queue<NetMessage *> in;
-        std::queue<NetMessage *> out;
+        std::queue<std::shared_ptr<NetMessage>> in;
+        std::queue<std::shared_ptr<NetMessage>> out;
     }
     std::string port = "44444";
     std::string user;

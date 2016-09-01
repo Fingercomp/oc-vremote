@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstring>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <thread>

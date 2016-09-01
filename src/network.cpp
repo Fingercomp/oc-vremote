@@ -496,7 +496,7 @@ void networkThread() {
                         // Send messages in the queue
                         while (!rtStgs::msgQueue::out.empty()) {
                             strOut.str(std::string(""));
-                            NetMessage *baseMsg = rtStgs::msgQueue::out.front();
+                            NetMessage *baseMsg = rtStgs::msgQueue::out.front().get();
                             switch (baseMsg->code) {
                                 case MSG_AUTH_CLIENT:
                                 case MSG_AUTH_SERVER:

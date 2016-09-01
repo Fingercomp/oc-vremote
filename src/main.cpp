@@ -1,7 +1,8 @@
 #include <fstream>
 #include <iostream>
-#include <thread>
+#include <memory>
 #include <queue>
+#include <thread>
 
 #include <SFML/Graphics.hpp>
 
@@ -37,6 +38,8 @@ int main() {
 
     bool wasDrag = false;
 
+    sf::Clock clock;
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -61,10 +64,10 @@ int main() {
                         if (keyQueuePressed.size() > 1) {
                             sf::Keyboard::Key k = keyQueuePressed.front();
                             keyQueuePressed.pop();
-                            nmsg::NetMessageEventKeyDown msg;
-                            msg.cod = static_cast<long>(keymap.at(k));
-                            msg.chr = 0;
-                            rtStgs::msgQueue::out.push(&msg);
+                            std::shared_ptr<nmsg::NetMessageEventKeyDown> msg = std::make_shared<nmsg::NetMessageEventKeyDown>();
+                            msg->cod = static_cast<long>(keymap.at(k));
+                            msg->chr = 0;
+                            rtStgs::msgQueue::out.push(msg);
                         }
                     }
                     break;
@@ -74,10 +77,10 @@ int main() {
                         if (keyQueueReleased.size() > 1) {
                             sf::Keyboard::Key k = keyQueueReleased.front();
                             keyQueueReleased.pop();
-                            nmsg::NetMessageEventKeyDown msg;
-                            msg.cod = static_cast<long>(keymap.at(k));
-                            msg.chr = 0;
-                            rtStgs::msgQueue::out.push(&msg);
+                            std::shared_ptr<nmsg::NetMessageEventKeyUp> msg = std::make_shared<nmsg::NetMessageEventKeyUp>();
+                            msg->cod = static_cast<long>(keymap.at(k));
+                            msg->chr = 0;
+                            rtStgs::msgQueue::out.push(msg);
                         }
                     }
                     break;
@@ -88,18 +91,18 @@ int main() {
                         sf::Keyboard::Key kup = keyQueueReleased.front();
                         keyQueuePressed.pop();
                         keyQueueReleased.pop();
-                        nmsg::NetMessageEventKeyDown msgdown;
-                        msgdown.cod = static_cast<long>(keymap.at(kdown));
-                        msgdown.chr = event.text.unicode;
-                        nmsg::NetMessageEventKeyUp msgup;
-                        msgup.cod = static_cast<long>(keymap.at(kup));
+                        std::shared_ptr<nmsg::NetMessageEventKeyDown> msgdown = std::make_shared<nmsg::NetMessageEventKeyDown>();
+                        msgdown->cod = static_cast<long>(keymap.at(kdown));
+                        msgdown->chr = event.text.unicode;
+                        std::shared_ptr<nmsg::NetMessageEventKeyUp> msgup = std::make_shared<nmsg::NetMessageEventKeyUp>();
+                        msgup->cod = static_cast<long>(keymap.at(kup));
                         if (kdown == kup) {
-                            msgup.chr = event.text.unicode;
+                            msgup->chr = event.text.unicode;
                         } else {
-                            msgup.chr = 0;
+                            msgup->chr = 0;
                         }
-                        rtStgs::msgQueue::out.push(&msgdown);
-                        rtStgs::msgQueue::out.push(&msgup);
+                        rtStgs::msgQueue::out.push(msgdown);
+                        rtStgs::msgQueue::out.push(msgup);
                     }
                     break;
                 }
@@ -127,10 +130,11 @@ int main() {
                             x /= 8;
                             y /= 16;
                             if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
-                                nmsg::NetMessageEventTouch msg;
-                                msg.x = x;
-                                msg.y = y;
-                                msg.button = button;
+                                std::shared_ptr<nmsg::NetMessageEventTouch> msg = std::make_shared<nmsg::NetMessageEventTouch>();
+                                msg->x = x;
+                                msg->y = y;
+                                msg->button = button;
+                                rtStgs::msgQueue::out.push(msg);
                             }
                         }
                     }
@@ -153,10 +157,11 @@ int main() {
                             x /= 8;
                             y /= 16;
                             if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
-                                nmsg::NetMessageEventDrag msg;
-                                msg.x = x;
-                                msg.y = y;
-                                msg.button = button;
+                                std::shared_ptr<nmsg::NetMessageEventDrag> msg = std::make_shared<nmsg::NetMessageEventDrag>();
+                                msg->x = x;
+                                msg->y = y;
+                                msg->button = button;
+                                rtStgs::msgQueue::out.push(msg);
                                 wasDrag = true;
                             }
                         }
@@ -187,10 +192,11 @@ int main() {
                                 x /= 8;
                                 y /= 16;
                                 if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
-                                    nmsg::NetMessageEventDrop msg;
-                                    msg.x = x;
-                                    msg.y = y;
-                                    msg.button = button;
+                                    std::shared_ptr<nmsg::NetMessageEventDrop> msg = std::make_shared<nmsg::NetMessageEventDrop>();
+                                    msg->x = x;
+                                    msg->y = y;
+                                    msg->button = button;
+                                    rtStgs::msgQueue::out.push(msg);
                                 }
                             }
                         }
@@ -206,11 +212,12 @@ int main() {
                             x /= 8;
                             y /= 16;
                             if (x >= 0 && y >= 0 && x < rtStgs::render::resolution.w && y <= rtStgs::render::resolution.h) {
-                                nmsg::NetMessageEventScroll msg;
-                                msg.x = x;
-                                msg.y = y;
-                                msg.direction = event.mouseWheelScroll.delta < 0 ? false : true;
-                                msg.delta = static_cast<uint8_t>(std::abs(event.mouseWheelScroll.delta));
+                                std::shared_ptr<nmsg::NetMessageEventScroll> msg = std::make_shared<nmsg::NetMessageEventScroll>();
+                                msg->x = x;
+                                msg->y = y;
+                                msg->direction = event.mouseWheelScroll.delta < 0 ? false : true;
+                                msg->delta = static_cast<uint8_t>(std::abs(event.mouseWheelScroll.delta));
+                                rtStgs::msgQueue::out.push(msg);
                             }
                         }
                     }
@@ -233,8 +240,16 @@ int main() {
             case State::AUTHORIZATION:
                 rtStgs::render::chars.set(0, 0, "The client is currently authorizating.");
                 rtStgs::render::chars.set(0, 1, "Please, wait.");
+                clock.restart();
                 break;
             case State::CONNECTED:
+                if (clock.getElapsedTime() >= sf::seconds(rtStgs::pingInterval)) {
+                    std::shared_ptr<nmsg::NetMessagePing> msg = std::make_shared<nmsg::NetMessagePing>();
+                    // XXX: it that random enough?
+                    msg->ping = 0xffffffffffffffff ^ (rtStgs::pingInterval << 4) ^ clock.getElapsedTime().asMicroseconds() ^ (rand() % 0xffffffffffffffff);
+                    rtStgs::msgQueue::out.push(msg);
+                    clock.restart();
+                }
                 break;
             case State::CLOSING:
                 window.close();
