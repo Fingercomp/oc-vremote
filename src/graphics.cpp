@@ -3,12 +3,10 @@
 
 void writeBitmapPixel(std::vector<sf::Uint8> &pixels, bool isWhite) {
     sf::Uint8 color = isWhite ? 0xff : 0x00;
-    // RGB
-    for (int i = 0; i < 3; ++i) {
+    // RGBA (set the "black" pixel transparent to allow drawing bg
+    for (int i = 0; i < 4; ++i) {
         pixels.push_back(color);
     }
-    // Alpha
-    pixels.push_back(sf::Uint8(0xff));
 }
 
 void loadBitmapFont(std::istream *str, std::vector<unsigned long> &result, sf::Texture &texture) {
@@ -190,17 +188,32 @@ void Tilemap::update() {
     _vertices.setPrimitiveType(sf::Quads);
     _vertices.resize(w * h * 4);
 
+    _bgVertices.setPrimitiveType(sf::Quads);
+    _bgVertices.resize(w * h * 4);
+
+    // Get FULL BLOCK (U+2588) codepoint; used for background
+    int fbx = 0;
+    int fby = 0;
+    for (std::size_t n = 0; n < _indexes.size(); n += 4) {
+        if (_indexes.at(n) == 0x2588) {
+            fbx = _indexes.at(n + 1);
+            fby = _indexes.at(n + 2);
+            break;
+        }
+    }
+
     for (int i = 0; i < w; ++i) {
         for (int j = 0; j < h; ++j) {
             Char chr = _charmap.get(i, j);
             // Color fg = _palette.index2color(chr.fg);
             unsigned long codepoint = chr.c;
             sf::Color fg = _palette.index2color(chr.fg);
+            sf::Color bg = _palette.index2color(chr.bg);
             int tx1 = 0;
             int ty1 = 0;
             int tx2 = 0;
             bool isWide = false;
-            for (std::string::size_type n = 0; n < _indexes.size(); n += 4) {
+            for (std::size_t n = 0; n < _indexes.size(); n += 4) {
                 if (_indexes.at(n) == codepoint) {
                     tx1 = _indexes.at(n + 1);
                     ty1 = _indexes.at(n + 2);
@@ -212,6 +225,23 @@ void Tilemap::update() {
             tx2 = isWide ? 8 : 0;
 
             sf::Vertex *quad = &_vertices[(i + j * w) * 4];
+            sf::Vertex *bgQuad = &_bgVertices[(i + j * w) * 4];
+
+            bgQuad[0].position = sf::Vector2f(i * 8, j * 16);
+            bgQuad[1].position = sf::Vector2f((i + 1) * 8 + tx2, j * 16);
+            bgQuad[2].position = sf::Vector2f((i + 1) * 8 + tx2, (j + 1) * 16);
+            bgQuad[3].position = sf::Vector2f(i * 8, (j + 1) * 16);
+
+            bgQuad[0].texCoords = sf::Vector2f(fbx * 8, fby * 16);
+            bgQuad[1].texCoords = sf::Vector2f((fbx + 1) * 8, fby * 16);
+            bgQuad[2].texCoords = sf::Vector2f((fbx + 1) * 8, (fby + 1) * 16);
+            bgQuad[3].texCoords = sf::Vector2f(fbx * 8, (fby + 1) * 16);
+
+            bgQuad[0].color = bg;
+            bgQuad[1].color = bg;
+            bgQuad[2].color = bg;
+            bgQuad[3].color = bg;
+
             quad[0].position = sf::Vector2f(i * 8, j * 16);
             quad[1].position = sf::Vector2f((i + 1) * 8 + tx2, j * 16);
             quad[2].position = sf::Vector2f((i + 1) * 8 + tx2, (j + 1) * 16);
@@ -226,7 +256,6 @@ void Tilemap::update() {
             quad[1].color = fg;
             quad[2].color = fg;
             quad[3].color = fg;
-
         }
     }
 }
@@ -234,5 +263,6 @@ void Tilemap::update() {
 void Tilemap::draw(sf::RenderTarget &target, sf::RenderStates states) const {
     states.transform *= getTransform();
     states.texture = &_tileset;
+    target.draw(_bgVertices, states);
     target.draw(_vertices, states);
 }

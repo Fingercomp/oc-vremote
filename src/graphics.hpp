@@ -42,6 +42,7 @@ private:
     Charmap &_charmap;
     sf::Texture &_tileset;
     sf::VertexArray _vertices;
+    sf::VertexArray _bgVertices;
     std::vector<unsigned long> &_indexes;
     Palette _palette;
     virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
