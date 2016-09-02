@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "SFML/Graphics.hpp"
@@ -48,4 +49,14 @@ template <typename T>
 inline void fill(std::vector<T> &vector, int size) {
     vector.reserve(size);
     vector.resize(size);
+}
+
+template<typename Derived, typename Base>
+std::unique_ptr<Derived> dynamic_unique_ptr_cast(std::unique_ptr<Base> &p)
+{
+    if(Derived *result = dynamic_cast<Derived *>(p.get())) {
+        p.release();
+        return std::unique_ptr<Derived>(result);
+    }
+    return std::unique_ptr<Derived>(nullptr);
 }

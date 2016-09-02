@@ -17,8 +17,8 @@ class Charmap;
 namespace rtStgs {
     extern State state;
     namespace msgQueue {
-        extern std::queue<std::shared_ptr<NetMessage>> in;
-        extern std::queue<std::shared_ptr<NetMessage>> out;
+        extern std::queue<std::unique_ptr<NetMessage>> in;
+        extern std::queue<std::unique_ptr<NetMessage>> out;
     }
     extern std::string port;
     extern std::string user;

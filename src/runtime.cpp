@@ -4,8 +4,8 @@
 namespace rtStgs {
     State state = State::INITIALIZING;
     namespace msgQueue {
-        std::queue<std::shared_ptr<NetMessage>> in;
-        std::queue<std::shared_ptr<NetMessage>> out;
+        std::queue<std::unique_ptr<NetMessage>> in;
+        std::queue<std::unique_ptr<NetMessage>> out;
     }
     // This port was choosen at random.
     // https://i.imgur.com/WiC1Rhi.png

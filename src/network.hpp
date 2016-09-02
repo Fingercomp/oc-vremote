@@ -10,6 +10,7 @@
 #include "main.hpp"
 #include "protocol.hpp"
 #include "runtime.hpp"
+#include "util.hpp"
 
 #ifdef _WIN32
 #ifndef _WIN32_WINNT
