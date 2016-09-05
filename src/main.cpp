@@ -258,7 +258,6 @@ int main() {
             case State::CONNECTED:
                 if (!rtStgs::ping::sent && rtStgs::ping::clock::clock.getElapsedTime() >= sf::seconds(rtStgs::ping::interval)) {
                     nmsg::NetMessagePing *msg = new nmsg::NetMessagePing;
-                    // XXX: it that random enough?
                     msg->ping = (0xffffffffffffffff ^ (rtStgs::ping::interval << 4) ^ rtStgs::ping::clock::clock.getElapsedTime().asMicroseconds() ^ (rand() % 0xffffffffffffffff)) & 0xffffffffffffffff;
                     rtStgs::ping::challenge = msg->ping;
                     std::unique_ptr<NetMessage> baseMsg(msg);

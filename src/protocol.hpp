@@ -63,24 +63,22 @@ struct Char {
 
 
 struct NetMessage {
-    NetMessageCode code;
-    // To allow dynamic_casting the NetMessage object in the
-    // message queue back to derived object, we need to make
-    // the class/struct polymorphic, i.e. have at least 1
-    // virtual member. The destructor will work, won't it?
-    // It doesn't even need to do anything...
-    virtual ~NetMessage() {}
+    virtual NetMessageCode code() const = 0;
 };
 
 
 namespace nmsg {
     struct NetMessageError: public NetMessage {
-        NetMessageCode code = MSG_ERROR;
+        virtual NetMessageCode code() const {
+            return MSG_ERROR;
+        }
         std::string description;
     };
 
     struct NetMessageAuthClient: public NetMessage {
-        NetMessageCode code = MSG_AUTH_CLIENT;
+        virtual NetMessageCode code() const {
+            return MSG_AUTH_CLIENT;
+        }
         std::string user;
         std::string password;
         ConnectionMode connectionMode;
@@ -88,13 +86,17 @@ namespace nmsg {
     };
 
     struct NetMessageAuthServer: public NetMessage {
-        NetMessageCode code = MSG_AUTH_SERVER;
+        virtual NetMessageCode code() const {
+            return MSG_AUTH_SERVER;
+        }
         AuthResult result;
         std::string displayString;
     };
 
     struct NetMessageInitialData: public NetMessage {
-        NetMessageCode code = MSG_INITIAL_DATA;
+        virtual NetMessageCode code() const {
+            return MSG_INITIAL_DATA;
+        }
         Palette palette;
         uint8_t fg;
         uint8_t bg;
@@ -105,29 +107,39 @@ namespace nmsg {
     };
 
     struct NetMessageSetBG: public NetMessage {
-        NetMessageCode code = MSG_SET_BG;
+        virtual NetMessageCode code() const {
+            return MSG_SET_BG;
+        }
         uint8_t index;
     };
 
     struct NetMessageSetFG: public NetMessage {
-        NetMessageCode code = MSG_SET_FG;
+        virtual NetMessageCode code() const {
+            return MSG_SET_FG;
+        }
         uint8_t index;
     };
 
     struct NetMessageSetPalette: public NetMessage {
-        NetMessageCode code = MSG_SET_PALETTE;
+        virtual NetMessageCode code() const {
+            return MSG_SET_PALETTE;
+        }
         Color color;
         uint8_t index;
     };
 
     struct NetMessageSetResolution: public NetMessage {
-        NetMessageCode code = MSG_SET_RESOLUTION;
+        virtual NetMessageCode code() const {
+            return MSG_SET_RESOLUTION;
+        }
         uint8_t w;
         uint8_t h;
     };
 
     struct NetMessageSetChars: public NetMessage {
-        NetMessageCode code = MSG_SET_CHARS;
+        virtual NetMessageCode code() const {
+            return MSG_SET_CHARS;
+        }
         uint8_t x;
         uint8_t y;
         std::string chars;
@@ -135,7 +147,9 @@ namespace nmsg {
     };
 
     struct NetMessageCopy: public NetMessage {
-        NetMessageCode code = MSG_COPY;
+        virtual NetMessageCode code() const {
+            return MSG_COPY;
+        }
         uint8_t x;
         uint8_t y;
         uint8_t w;
@@ -145,7 +159,9 @@ namespace nmsg {
     };
 
     struct NetMessageFill: public NetMessage {
-        NetMessageCode code = MSG_FILL;
+        virtual NetMessageCode code() const {
+            return MSG_FILL;
+        }
         uint8_t x;
         uint8_t y;
         uint8_t w;
@@ -154,42 +170,56 @@ namespace nmsg {
     };
 
     struct NetMessageTurnOnOff: public NetMessage {
-        NetMessageCode code = MSG_TURN_ON_OFF;
+        virtual NetMessageCode code() const {
+            return MSG_TURN_ON_OFF;
+        }
         bool on;
     };
 
     struct NetMessageSetPrecise: public NetMessage {
-        NetMessageCode code = MSG_SET_PRECISE;
+        virtual NetMessageCode code() const {
+            return MSG_SET_PRECISE;
+        }
         bool precise;
     };
 
     struct NetMessageFetch: public NetMessage {
-        NetMessageCode code = MSG_FETCH;
+        virtual NetMessageCode code() const {
+            return MSG_FETCH;
+        }
     };
 
     struct NetMessageEventTouch: public NetMessage {
-        NetMessageCode code = MSG_EVENT_TOUCH;
+        virtual NetMessageCode code() const {
+            return MSG_EVENT_TOUCH;
+        }
         uint8_t x;
         uint8_t y;
         uint8_t button;
     };
 
     struct NetMessageEventDrag: public NetMessage {
-        NetMessageCode code = MSG_EVENT_DRAG;
+        virtual NetMessageCode code() const {
+            return MSG_EVENT_DRAG;
+        }
         uint8_t x;
         uint8_t y;
         uint8_t button;
     };
 
     struct NetMessageEventDrop: public NetMessage {
-        NetMessageCode code = MSG_EVENT_DROP;
+        virtual NetMessageCode code() const {
+            return MSG_EVENT_DROP;
+        }
         uint8_t x;
         uint8_t y;
         uint8_t button;
     };
 
     struct NetMessageEventScroll: public NetMessage {
-        NetMessageCode code = MSG_EVENT_SCROLL;
+        virtual NetMessageCode code() const {
+            return MSG_EVENT_SCROLL;
+        }
         uint8_t x;
         uint8_t y;
         bool direction;
@@ -197,29 +227,39 @@ namespace nmsg {
     };
 
     struct NetMessageEventKeyDown: public NetMessage {
-        NetMessageCode code = MSG_EVENT_KEY_DOWN;
+        virtual NetMessageCode code() const {
+            return MSG_EVENT_KEY_DOWN;
+        }
         long chr;
         long cod;
     };
 
     struct NetMessageEventKeyUp: public NetMessage {
-        NetMessageCode code = MSG_EVENT_KEY_UP;
+        virtual NetMessageCode code() const {
+            return MSG_EVENT_KEY_UP;
+        }
         long chr;
         long cod;
     };
 
     struct NetMessageEventClipboard: public NetMessage {
-        NetMessageCode code = MSG_EVENT_CLIPBOARD;
+        virtual NetMessageCode code() const {
+            return MSG_EVENT_CLIPBOARD;
+        }
         std::string data;
     };
 
     struct NetMessagePing: public NetMessage {
-        NetMessageCode code = MSG_PING;
+        virtual NetMessageCode code() const {
+            return MSG_PING;
+        }
         uint64_t ping;
     };
 
     struct NetMessagePong: public NetMessage {
-        NetMessageCode code = MSG_PONG;
+        virtual NetMessageCode code() const {
+            return MSG_PONG;
+        }
         uint64_t pong;
     };
 }

@@ -500,7 +500,7 @@ void networkThread() {
                     while (!rtStgs::msgQueue::out.empty()) {
                         strOut.str(std::string(""));
                         std::unique_ptr<NetMessage> &baseMsg = rtStgs::msgQueue::out.front();
-                        switch (baseMsg->code) {
+                        switch (baseMsg->code()) {
                             case MSG_AUTH_CLIENT:
                             case MSG_AUTH_SERVER:
                             case MSG_INITIAL_DATA:
@@ -520,49 +520,49 @@ void networkThread() {
                             case MSG_ERROR: {
                                 std::unique_ptr<nmsg::NetMessageError> msg = dynamic_unique_ptr_cast<nmsg::NetMessageError>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                             case MSG_EVENT_TOUCH: {
                                 std::unique_ptr<nmsg::NetMessageEventTouch> msg = dynamic_unique_ptr_cast<nmsg::NetMessageEventTouch>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                             case MSG_EVENT_DRAG: {
                                 std::unique_ptr<nmsg::NetMessageEventDrag> msg = dynamic_unique_ptr_cast<nmsg::NetMessageEventDrag>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                             case MSG_EVENT_DROP: {
                                 std::unique_ptr<nmsg::NetMessageEventDrop> msg = dynamic_unique_ptr_cast<nmsg::NetMessageEventDrop>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                             case MSG_EVENT_SCROLL: {
                                 std::unique_ptr<nmsg::NetMessageEventScroll> msg = dynamic_unique_ptr_cast<nmsg::NetMessageEventScroll>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                             case MSG_EVENT_KEY_DOWN: {
                                 std::unique_ptr<nmsg::NetMessageEventKeyDown> msg = dynamic_unique_ptr_cast<nmsg::NetMessageEventKeyDown>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                             case MSG_EVENT_KEY_UP: {
                                 std::unique_ptr<nmsg::NetMessageEventKeyUp> msg = dynamic_unique_ptr_cast<nmsg::NetMessageEventKeyUp>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                             case MSG_EVENT_CLIPBOARD: {
                                 std::unique_ptr<nmsg::NetMessageEventClipboard> msg = dynamic_unique_ptr_cast<nmsg::NetMessageEventClipboard>(baseMsg);
                                 pack(strOut, *msg);
-                                sendMsg(strOut, socket, msg->code);
+                                sendMsg(strOut, socket, msg->code());
                                 break;
                             }
                         }
