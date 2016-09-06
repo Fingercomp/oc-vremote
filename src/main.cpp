@@ -260,9 +260,7 @@ int main() {
                     nmsg::NetMessagePing *msg = new nmsg::NetMessagePing;
                     msg->ping = (0xffffffffffffffff ^ (rtStgs::ping::interval << 4) ^ rtStgs::ping::clock::clock.getElapsedTime().asMicroseconds() ^ (rand() % 0xffffffffffffffff)) & 0xffffffffffffffff;
                     rtStgs::ping::challenge = msg->ping;
-                    std::unique_ptr<NetMessage> baseMsg(msg);
-                    baseMsg->code = msg->code;
-                    rtStgs::msgQueue::out.push(std::move(baseMsg));
+                    rtStgs::msgQueue::out.push(std::unique_ptr<NetMessage>(msg));
                     rtStgs::ping::clock::clock.restart();
                     rtStgs::ping::clock::timeout.restart();
                     rtStgs::ping::sent = true;
