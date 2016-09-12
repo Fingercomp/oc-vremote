@@ -34,20 +34,20 @@ enum NetMessageCode {
     MSG_EVENT_KEY_UP, // = 19
     MSG_EVENT_CLIPBOARD, // = 20
     MSG_PING, // = 21
-    MSG_PONG, // = 22
+    MSG_PONG // = 22
 };
 
 enum class ConnectionMode {
     GpuKbd, // = 0
     Gpu, // = 1
     Kbd, // = 2
-    Custom, // = 3
+    Custom // = 3
 };
 
 enum class AuthResult {
     Authenticated, // = 0
     WrongCredentials, // = 1
-    UnsupportedMode, // = 2
+    UnsupportedMode // = 2
 };
 
 struct Resolution {
