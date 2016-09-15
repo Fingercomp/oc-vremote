@@ -128,7 +128,7 @@ int Socket::recv(std::string &strData, const int size, const int timeout) {
     timeval to {timeout / 1000000, timeout % 1000000};
     if (select(FD_SETSIZE, &readfds, nullptr, nullptr, &to) == 1) {
         if (FD_ISSET(sockd, &readfds)) {
-            std::unique_ptr<char> data(new char[size]);
+            std::unique_ptr<char[]> data(new char[size]);
             int got = 0;
             int bytesleft = size;
             int n;
