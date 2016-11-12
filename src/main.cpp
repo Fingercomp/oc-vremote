@@ -3,6 +3,7 @@
 #include <memory>
 #include <queue>
 #include <thread>
+#include <cmath>
 
 #include <SFML/Graphics.hpp>
 
@@ -34,8 +35,7 @@ int main() {
 
     std::thread thNet(networkThread);
 
-    std::queue<sf::Keyboard::Key> keyQueuePressed;
-    std::queue<sf::Keyboard::Key> keyQueueReleased;
+    long lastKey = -1;
 
     bool wasDrag = false;
 
@@ -59,50 +59,22 @@ int main() {
                             rtStgs::state = State::WAITING_FOR_CONNECTION;
                         }
                     } else if (rtStgs::state == State::CONNECTED) {
-                        keyQueuePressed.push(event.key.code);
-                        if (keyQueuePressed.size() > 1) {
-                            sf::Keyboard::Key k = keyQueuePressed.front();
-                            keyQueuePressed.pop();
-                            nmsg::NetMessageEventKeyDown *msg = new nmsg::NetMessageEventKeyDown;
-                            msg->cod = static_cast<long>(keymap.at(k));
-                            msg->chr = 0;
-                            rtStgs::msgQueue::out.push(std::unique_ptr<NetMessage>(msg));
-                        }
-                    }
-                    break;
-                }
-                case sf::Event::KeyReleased: {
-                    if (rtStgs::state == State::CONNECTED) {
-                        if (keyQueueReleased.size() > 1) {
-                            sf::Keyboard::Key k = keyQueueReleased.front();
-                            keyQueueReleased.pop();
-                            nmsg::NetMessageEventKeyUp *msg = new nmsg::NetMessageEventKeyUp;
-                            msg->cod = static_cast<long>(keymap.at(k));
-                            msg->chr = 0;
-                            rtStgs::msgQueue::out.push(std::unique_ptr<NetMessage>(msg));
-                        }
+                        lastKey = static_cast<long>(event.key.code);
                     }
                     break;
                 }
                 case sf::Event::TextEntered: {
                     if (rtStgs::state == State::CONNECTED) {
-                        if (!keyQueuePressed.empty() && !keyQueueReleased.empty()) {
-                            sf::Keyboard::Key kdown = keyQueuePressed.front();
-                            sf::Keyboard::Key kup = keyQueueReleased.front();
-                            keyQueuePressed.pop();
-                            keyQueueReleased.pop();
+                        if (lastKey != -1) {
                             nmsg::NetMessageEventKeyDown *msgdown = new nmsg::NetMessageEventKeyDown;
-                            msgdown->cod = static_cast<long>(keymap.at(kdown));
+                            msgdown->cod = lastKey;
                             msgdown->chr = event.text.unicode;
                             nmsg::NetMessageEventKeyUp *msgup = new nmsg::NetMessageEventKeyUp;
-                            msgup->cod = static_cast<long>(keymap.at(kup));
-                            if (kdown == kup) {
-                                msgup->chr = event.text.unicode;
-                            } else {
-                                msgup->chr = 0;
-                            }
+                            msgup->cod = lastKey;
+                            msgup->chr = event.text.unicode;
                             rtStgs::msgQueue::out.push(std::unique_ptr<NetMessage>(msgdown));
                             rtStgs::msgQueue::out.push(std::unique_ptr<NetMessage>(msgup));
+                            lastKey = -1;
                         }
                     }
                     break;

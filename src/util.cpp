@@ -138,3 +138,10 @@ Color& Palette::operator[](const int idx) {
 const Color& Palette::operator[](const int idx) const {
     return _colors.at(idx);
 }
+
+void resetSS(std::stringstream &ss) {
+    ss.seekp(0);
+    ss.seekg(0);
+    ss.str(std::string(""));
+    ss.clear();
+}

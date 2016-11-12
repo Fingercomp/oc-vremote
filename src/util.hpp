@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include "SFML/Graphics.hpp"
@@ -50,6 +51,8 @@ inline void fill(std::vector<T> &vector, int size) {
     vector.reserve(size);
     vector.resize(size);
 }
+
+void resetSS(std::stringstream &ss);
 
 template<typename Derived, typename Base>
 std::unique_ptr<Derived> dynamic_unique_ptr_cast(std::unique_ptr<Base> &p)

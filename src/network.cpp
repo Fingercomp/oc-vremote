@@ -242,8 +242,7 @@ bool receiveMsg(std::stringstream &str, Socket &socket, int timeout) {
 
 bool sendMsg(std::stringstream &str, Socket &socket, NetMessageCode opcode) {
     std::string sendString;
-    while (!str.eof()) {
-        char c = str.get();
+    for (char c; str.get(c);) {
         sendString.push_back(c);
     }
     std::stringstream sendStr;
@@ -283,7 +282,7 @@ void networkThread() {
                 bool authed = false;
                 while (rtStgs::state == State::AUTHORIZATION && !socket.isClosed()) {
                     checkIsClosing();
-                    strIn.str(std::string(""));
+                    resetSS(strIn);
                     if (receiveMsg(strIn, socket, 250000)) {
                         NetMessageCode opcode;
                         uint24_t len;
@@ -339,7 +338,7 @@ void networkThread() {
 
                 while (rtStgs::state == State::CONNECTED && !socket.isClosed()) {
                     checkIsClosing();
-                    strIn.str(std::string(""));
+                    resetSS(strIn);
                     if (receiveMsg(strIn, socket, 250000)) {
                         NetMessageCode opcode;
                         uint24_t len;
@@ -498,7 +497,7 @@ void networkThread() {
                     }
                     // Send messages in the queue
                     while (!rtStgs::msgQueue::out.empty()) {
-                        strOut.str(std::string(""));
+                        resetSS(strOut);
                         std::unique_ptr<NetMessage> &baseMsg = rtStgs::msgQueue::out.front();
                         switch (baseMsg->code()) {
                             case MSG_AUTH_CLIENT:
