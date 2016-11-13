@@ -44,7 +44,7 @@ private:
     sf::VertexArray _vertices;
     sf::VertexArray _bgVertices;
     std::vector<unsigned long> &_indexes;
-    Palette _palette;
+    Palette &_palette;
     virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 public:
     Tilemap(sf::Texture &texture, Charmap &charmap, std::vector<unsigned long> &indexes, Palette &palette);

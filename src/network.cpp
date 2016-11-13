@@ -326,7 +326,7 @@ void networkThread() {
                                     int y = i / msg.resolution.w;
                                     rtStgs::render::chars.get(x, y) = msg.chars.at(i);
                                 }
-                                rtStgs::state = State::CONNECTION_ATTEMPT;
+                                rtStgs::state = State::CONNECTED;
                             }
                         }
                     }

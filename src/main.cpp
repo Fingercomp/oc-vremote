@@ -25,9 +25,7 @@ int main() {
     fio.close();
     fistr = nullptr;
 
-    Palette palette;
-
-    Tilemap tilemap(texture, rtStgs::render::chars, indexes, palette);
+    Tilemap tilemap(texture, rtStgs::render::chars, indexes, rtStgs::render::palette);
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Test");
     window.setKeyRepeatEnabled(false);

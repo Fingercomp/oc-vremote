@@ -152,12 +152,12 @@ void Charmap::copy(const int x, const int y, const int w, const int h, const int
     std::vector<Char> copyRegion;
     for (int j = y; j < y + h; ++j) {
         for (int i = x; i < x + w; ++i) {
-            copyRegion.push_back(get(x, y));
+            copyRegion.push_back(get(i, j));
         }
     }
     for (int j = 0; j < h; ++j) {
         for (int i = 0; i < w; ++i) {
-            get(tx + i, ty + j) = copyRegion.at(y * w + x);
+            get(tx + i, ty + j) = copyRegion.at(j * w + i);
         }
     }
 }
