@@ -1,6 +1,0 @@
-[package]
-name = "oc-vremote"
-version = "0.1.0"
-authors = ["Fingercomp <fingercomp@users.noreply.github.com>"]
-
-[dependencies]
